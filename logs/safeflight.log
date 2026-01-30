@@ -1,0 +1,92 @@
+2026-01-30T20:52:52.088Z  INFO 3658 --- [safeflight] [Test worker] c.safelight.SafeflightApplicationTests   : Starting SafeflightApplicationTests using Java 24.0.2 with PID 3658 (started by harrish in /Users/harrish/Desktop/sqp-project/project code/safeflight)
+2026-01-30T20:52:52.091Z  INFO 3658 --- [safeflight] [Test worker] c.safelight.SafeflightApplicationTests   : No active profile set, falling back to 1 default profile: "default"
+2026-01-30T20:52:52.414Z  INFO 3658 --- [safeflight] [Test worker] o.s.b.w.a.WelcomePageHandlerMapping      : Adding welcome page: class path resource [static/index.html]
+2026-01-30T20:52:52.555Z  INFO 3658 --- [safeflight] [Test worker] c.safelight.SafeflightApplicationTests   : Started SafeflightApplicationTests in 0.586 seconds (process running for 1.283)
+2026-01-30T20:53:05.204Z  INFO 3704 --- [safeflight] [main] com.safelight.SafeflightApplication      : Starting SafeflightApplication using Java 24.0.2 with PID 3704 (/Users/harrish/Desktop/sqp-project/project code/safeflight/build/classes/java/main started by harrish in /Users/harrish/Desktop/sqp-project/project code/safeflight)
+2026-01-30T20:53:05.206Z  INFO 3704 --- [safeflight] [main] com.safelight.SafeflightApplication      : No active profile set, falling back to 1 default profile: "default"
+2026-01-30T20:53:05.580Z DEBUG 3704 --- [safeflight] [main] org.apache.catalina.core.ContainerBase   : Add container child [StandardHost[localhost]] to container [StandardEngine[Tomcat]]
+2026-01-30T20:53:05.593Z DEBUG 3704 --- [safeflight] [main] org.apache.catalina.core.ContainerBase   : Add container child [TomcatEmbeddedContext[]] to container [StandardEngine[Tomcat].StandardHost[localhost]]
+2026-01-30T20:53:05.595Z  INFO 3704 --- [safeflight] [main] o.s.boot.tomcat.TomcatWebServer          : Tomcat initialized with port 8080 (http)
+2026-01-30T20:53:05.604Z  INFO 3704 --- [safeflight] [main] o.apache.catalina.core.StandardService   : Starting service [Tomcat]
+2026-01-30T20:53:05.604Z  INFO 3704 --- [safeflight] [main] o.apache.catalina.core.StandardEngine    : Starting Servlet engine: [Apache Tomcat/11.0.15]
+2026-01-30T20:53:05.622Z DEBUG 3704 --- [safeflight] [main] o.apache.catalina.core.StandardContext   : No manager found. Checking if cluster manager should be used. Cluster configured: [false], Application distributable: [false]
+2026-01-30T20:53:05.625Z DEBUG 3704 --- [safeflight] [main] o.apache.catalina.core.StandardContext   : Configured a manager of class [org.apache.catalina.session.StandardManager]
+2026-01-30T20:53:05.629Z  INFO 3704 --- [safeflight] [main] b.w.c.s.WebApplicationContextInitializer : Root WebApplicationContext: initialization completed in 393 ms
+2026-01-30T20:53:05.638Z DEBUG 3704 --- [safeflight] [main] org.apache.catalina.core.ContainerBase   : Add container child [StandardWrapper[dispatcherServlet]] to container [StandardEngine[Tomcat].StandardHost[localhost].TomcatEmbeddedContext[]]
+2026-01-30T20:53:05.683Z  INFO 3704 --- [safeflight] [main] o.s.b.w.a.WelcomePageHandlerMapping      : Adding welcome page: class path resource [static/index.html]
+2026-01-30T20:53:05.809Z  INFO 3704 --- [safeflight] [main] o.s.boot.tomcat.TomcatWebServer          : Tomcat started on port 8080 (http) with context path '/'
+2026-01-30T20:53:05.813Z  INFO 3704 --- [safeflight] [main] com.safelight.SafeflightApplication      : Started SafeflightApplication in 0.852 seconds (process running for 1.053)
+2026-01-30T20:53:40.486Z  INFO 3704 --- [safeflight] [http-nio-8080-exec-1] o.a.c.c.C.[Tomcat].[localhost].[/]       : Initializing Spring DispatcherServlet 'dispatcherServlet'
+2026-01-30T20:53:40.487Z  INFO 3704 --- [safeflight] [http-nio-8080-exec-1] o.s.web.servlet.DispatcherServlet        : Initializing Servlet 'dispatcherServlet'
+2026-01-30T20:53:40.488Z  INFO 3704 --- [safeflight] [http-nio-8080-exec-1] o.s.web.servlet.DispatcherServlet        : Completed initialization in 1 ms
+2026-01-30T20:59:12.693Z  INFO 3704 --- [safeflight] [SpringApplicationShutdownHook] o.s.boot.tomcat.GracefulShutdown         : Commencing graceful shutdown. Waiting for active requests to complete
+2026-01-30T20:59:12.703Z  INFO 3704 --- [safeflight] [tomcat-shutdown] o.s.boot.tomcat.GracefulShutdown         : Graceful shutdown complete
+2026-01-30T21:01:53.203Z  INFO 4051 --- [safeflight] [Test worker] c.safelight.SafeflightApplicationTests   : Starting SafeflightApplicationTests using Java 24.0.2 with PID 4051 (started by harrish in /Users/harrish/Desktop/sqp-project/project code/safeflight)
+2026-01-30T21:01:53.204Z  INFO 4051 --- [safeflight] [Test worker] c.safelight.SafeflightApplicationTests   : No active profile set, falling back to 1 default profile: "default"
+2026-01-30T21:01:53.528Z  INFO 4051 --- [safeflight] [Test worker] o.s.b.w.a.WelcomePageHandlerMapping      : Adding welcome page: class path resource [static/index.html]
+2026-01-30T21:01:53.674Z  INFO 4051 --- [safeflight] [Test worker] c.safelight.SafeflightApplicationTests   : Started SafeflightApplicationTests in 0.6 seconds (process running for 1.291)
+2026-01-30T21:02:48.059Z  INFO 4151 --- [safeflight] [main] com.safelight.SafeflightApplication      : Starting SafeflightApplication v0.0.1-SNAPSHOT using Java 24.0.2 with PID 4151 (/Users/harrish/Desktop/sqp-project/project code/safeflight/build/libs/safeflight-0.0.1-SNAPSHOT.jar started by harrish in /Users/harrish/Desktop/sqp-project/project code/safeflight)
+2026-01-30T21:02:48.061Z  INFO 4151 --- [safeflight] [main] com.safelight.SafeflightApplication      : No active profile set, falling back to 1 default profile: "default"
+2026-01-30T21:02:48.739Z DEBUG 4151 --- [safeflight] [main] org.apache.catalina.core.ContainerBase   : Add container child [StandardHost[localhost]] to container [StandardEngine[Tomcat]]
+2026-01-30T21:02:48.756Z DEBUG 4151 --- [safeflight] [main] org.apache.catalina.core.ContainerBase   : Add container child [TomcatEmbeddedContext[]] to container [StandardEngine[Tomcat].StandardHost[localhost]]
+2026-01-30T21:02:48.759Z  INFO 4151 --- [safeflight] [main] o.s.boot.tomcat.TomcatWebServer          : Tomcat initialized with port 8080 (http)
+2026-01-30T21:02:48.770Z  INFO 4151 --- [safeflight] [main] o.apache.catalina.core.StandardService   : Starting service [Tomcat]
+2026-01-30T21:02:48.770Z  INFO 4151 --- [safeflight] [main] o.apache.catalina.core.StandardEngine    : Starting Servlet engine: [Apache Tomcat/11.0.15]
+2026-01-30T21:02:48.788Z DEBUG 4151 --- [safeflight] [main] o.apache.catalina.core.StandardContext   : No manager found. Checking if cluster manager should be used. Cluster configured: [false], Application distributable: [false]
+2026-01-30T21:02:48.792Z DEBUG 4151 --- [safeflight] [main] o.apache.catalina.core.StandardContext   : Configured a manager of class [org.apache.catalina.session.StandardManager]
+2026-01-30T21:02:48.796Z  INFO 4151 --- [safeflight] [main] b.w.c.s.WebApplicationContextInitializer : Root WebApplicationContext: initialization completed in 699 ms
+2026-01-30T21:02:48.809Z DEBUG 4151 --- [safeflight] [main] org.apache.catalina.core.ContainerBase   : Add container child [StandardWrapper[dispatcherServlet]] to container [StandardEngine[Tomcat].StandardHost[localhost].TomcatEmbeddedContext[]]
+2026-01-30T21:02:48.861Z  INFO 4151 --- [safeflight] [main] o.s.b.w.a.WelcomePageHandlerMapping      : Adding welcome page: class path resource [static/index.html]
+2026-01-30T21:02:49.002Z  INFO 4151 --- [safeflight] [main] o.s.boot.tomcat.TomcatWebServer          : Tomcat started on port 8080 (http) with context path '/'
+2026-01-30T21:02:49.010Z  INFO 4151 --- [safeflight] [main] com.safelight.SafeflightApplication      : Started SafeflightApplication in 1.241 seconds (process running for 1.579)
+2026-01-30T21:02:57.432Z  INFO 4151 --- [safeflight] [http-nio-8080-exec-1] o.a.c.c.C.[Tomcat].[localhost].[/]       : Initializing Spring DispatcherServlet 'dispatcherServlet'
+2026-01-30T21:02:57.432Z  INFO 4151 --- [safeflight] [http-nio-8080-exec-1] o.s.web.servlet.DispatcherServlet        : Initializing Servlet 'dispatcherServlet'
+2026-01-30T21:02:57.433Z  INFO 4151 --- [safeflight] [http-nio-8080-exec-1] o.s.web.servlet.DispatcherServlet        : Completed initialization in 1 ms
+2026-01-30T21:03:08.211Z  INFO 4151 --- [safeflight] [SpringApplicationShutdownHook] o.s.boot.tomcat.GracefulShutdown         : Commencing graceful shutdown. Waiting for active requests to complete
+2026-01-30T21:03:08.223Z  INFO 4151 --- [safeflight] [tomcat-shutdown] o.s.boot.tomcat.GracefulShutdown         : Graceful shutdown complete
+2026-01-30T21:08:15.975Z  INFO 4447 --- [safeflight] [Test worker] c.safelight.SafeflightApplicationTests   : Starting SafeflightApplicationTests using Java 24.0.2 with PID 4447 (started by harrish in /Users/harrish/Desktop/sqp-project/project code/safeflight)
+2026-01-30T21:08:15.976Z  INFO 4447 --- [safeflight] [Test worker] c.safelight.SafeflightApplicationTests   : No active profile set, falling back to 1 default profile: "default"
+2026-01-30T21:08:16.307Z  INFO 4447 --- [safeflight] [Test worker] o.s.b.w.a.WelcomePageHandlerMapping      : Adding welcome page: class path resource [static/index.html]
+2026-01-30T21:08:16.451Z  INFO 4447 --- [safeflight] [Test worker] c.safelight.SafeflightApplicationTests   : Started SafeflightApplicationTests in 0.605 seconds (process running for 1.302)
+2026-01-30T21:47:28.422Z  INFO 5907 --- [safeflight] [main] com.safelight.SafeflightApplication      : Starting SafeflightApplication v0.0.1-SNAPSHOT using Java 24.0.2 with PID 5907 (/Users/harrish/Desktop/sqp-project/project code/safeflight/build/libs/safeflight-0.0.1-SNAPSHOT.jar started by harrish in /Users/harrish/Desktop/sqp-project/project code/safeflight)
+2026-01-30T21:47:28.425Z  INFO 5907 --- [safeflight] [main] com.safelight.SafeflightApplication      : No active profile set, falling back to 1 default profile: "default"
+2026-01-30T21:47:28.939Z DEBUG 5907 --- [safeflight] [main] org.apache.catalina.core.ContainerBase   : Add container child [StandardHost[localhost]] to container [StandardEngine[Tomcat]]
+2026-01-30T21:47:28.955Z DEBUG 5907 --- [safeflight] [main] org.apache.catalina.core.ContainerBase   : Add container child [TomcatEmbeddedContext[]] to container [StandardEngine[Tomcat].StandardHost[localhost]]
+2026-01-30T21:47:28.959Z  INFO 5907 --- [safeflight] [main] o.s.boot.tomcat.TomcatWebServer          : Tomcat initialized with port 8080 (http)
+2026-01-30T21:47:28.968Z  INFO 5907 --- [safeflight] [main] o.apache.catalina.core.StandardService   : Starting service [Tomcat]
+2026-01-30T21:47:28.969Z  INFO 5907 --- [safeflight] [main] o.apache.catalina.core.StandardEngine    : Starting Servlet engine: [Apache Tomcat/11.0.15]
+2026-01-30T21:47:28.991Z DEBUG 5907 --- [safeflight] [main] o.apache.catalina.core.StandardContext   : No manager found. Checking if cluster manager should be used. Cluster configured: [false], Application distributable: [false]
+2026-01-30T21:47:28.994Z DEBUG 5907 --- [safeflight] [main] o.apache.catalina.core.StandardContext   : Configured a manager of class [org.apache.catalina.session.StandardManager]
+2026-01-30T21:47:28.998Z  INFO 5907 --- [safeflight] [main] b.w.c.s.WebApplicationContextInitializer : Root WebApplicationContext: initialization completed in 531 ms
+2026-01-30T21:47:29.011Z DEBUG 5907 --- [safeflight] [main] org.apache.catalina.core.ContainerBase   : Add container child [StandardWrapper[dispatcherServlet]] to container [StandardEngine[Tomcat].StandardHost[localhost].TomcatEmbeddedContext[]]
+2026-01-30T21:47:29.064Z  INFO 5907 --- [safeflight] [main] o.s.b.w.a.WelcomePageHandlerMapping      : Adding welcome page: class path resource [static/index.html]
+2026-01-30T21:47:29.209Z  INFO 5907 --- [safeflight] [main] o.s.boot.tomcat.TomcatWebServer          : Tomcat started on port 8080 (http) with context path '/'
+2026-01-30T21:47:29.220Z  INFO 5907 --- [safeflight] [main] com.safelight.SafeflightApplication      : Started SafeflightApplication in 1.124 seconds (process running for 1.498)
+2026-01-30T21:47:36.788Z  INFO 5907 --- [safeflight] [http-nio-8080-exec-1] o.a.c.c.C.[Tomcat].[localhost].[/]       : Initializing Spring DispatcherServlet 'dispatcherServlet'
+2026-01-30T21:47:36.789Z  INFO 5907 --- [safeflight] [http-nio-8080-exec-1] o.s.web.servlet.DispatcherServlet        : Initializing Servlet 'dispatcherServlet'
+2026-01-30T21:47:36.790Z  INFO 5907 --- [safeflight] [http-nio-8080-exec-1] o.s.web.servlet.DispatcherServlet        : Completed initialization in 1 ms
+2026-01-30T22:10:24.737Z  INFO 5907 --- [safeflight] [SpringApplicationShutdownHook] o.s.boot.tomcat.GracefulShutdown         : Commencing graceful shutdown. Waiting for active requests to complete
+2026-01-30T22:10:24.749Z  INFO 5907 --- [safeflight] [tomcat-shutdown] o.s.boot.tomcat.GracefulShutdown         : Graceful shutdown complete
+2026-01-30T22:11:13.862Z  INFO 6422 --- [safeflight] [Test worker] c.safelight.SafeflightApplicationTests   : Starting SafeflightApplicationTests using Java 24.0.2 with PID 6422 (started by harrish in /Users/harrish/Desktop/sqp-project/project code/safeflight)
+2026-01-30T22:11:13.865Z  INFO 6422 --- [safeflight] [Test worker] c.safelight.SafeflightApplicationTests   : No active profile set, falling back to 1 default profile: "default"
+2026-01-30T22:11:14.739Z  INFO 6422 --- [safeflight] [Test worker] o.s.b.w.a.WelcomePageHandlerMapping      : Adding welcome page: class path resource [static/index.html]
+2026-01-30T22:11:15.044Z  INFO 6422 --- [safeflight] [Test worker] c.safelight.SafeflightApplicationTests   : Started SafeflightApplicationTests in 1.492 seconds (process running for 2.884)
+2026-01-30T22:12:16.986Z  INFO 6513 --- [safeflight] [main] com.safelight.SafeflightApplication      : Starting SafeflightApplication v0.0.1-SNAPSHOT using Java 24.0.2 with PID 6513 (/Users/harrish/Desktop/sqp-project/project code/safeflight/build/libs/safeflight-0.0.1-SNAPSHOT.jar started by harrish in /Users/harrish/Desktop/sqp-project/project code/safeflight)
+2026-01-30T22:12:16.988Z  INFO 6513 --- [safeflight] [main] com.safelight.SafeflightApplication      : No active profile set, falling back to 1 default profile: "default"
+2026-01-30T22:12:17.451Z DEBUG 6513 --- [safeflight] [main] org.apache.catalina.core.ContainerBase   : Add container child [StandardHost[localhost]] to container [StandardEngine[Tomcat]]
+2026-01-30T22:12:17.465Z DEBUG 6513 --- [safeflight] [main] org.apache.catalina.core.ContainerBase   : Add container child [TomcatEmbeddedContext[]] to container [StandardEngine[Tomcat].StandardHost[localhost]]
+2026-01-30T22:12:17.468Z  INFO 6513 --- [safeflight] [main] o.s.boot.tomcat.TomcatWebServer          : Tomcat initialized with port 8080 (http)
+2026-01-30T22:12:17.477Z  INFO 6513 --- [safeflight] [main] o.apache.catalina.core.StandardService   : Starting service [Tomcat]
+2026-01-30T22:12:17.477Z  INFO 6513 --- [safeflight] [main] o.apache.catalina.core.StandardEngine    : Starting Servlet engine: [Apache Tomcat/11.0.15]
+2026-01-30T22:12:17.496Z DEBUG 6513 --- [safeflight] [main] o.apache.catalina.core.StandardContext   : No manager found. Checking if cluster manager should be used. Cluster configured: [false], Application distributable: [false]
+2026-01-30T22:12:17.498Z DEBUG 6513 --- [safeflight] [main] o.apache.catalina.core.StandardContext   : Configured a manager of class [org.apache.catalina.session.StandardManager]
+2026-01-30T22:12:17.503Z  INFO 6513 --- [safeflight] [main] b.w.c.s.WebApplicationContextInitializer : Root WebApplicationContext: initialization completed in 481 ms
+2026-01-30T22:12:17.515Z DEBUG 6513 --- [safeflight] [main] org.apache.catalina.core.ContainerBase   : Add container child [StandardWrapper[dispatcherServlet]] to container [StandardEngine[Tomcat].StandardHost[localhost].TomcatEmbeddedContext[]]
+2026-01-30T22:12:17.569Z  INFO 6513 --- [safeflight] [main] o.s.b.w.a.WelcomePageHandlerMapping      : Adding welcome page: class path resource [static/index.html]
+2026-01-30T22:12:17.711Z  INFO 6513 --- [safeflight] [main] o.s.boot.tomcat.TomcatWebServer          : Tomcat started on port 8080 (http) with context path '/'
+2026-01-30T22:12:17.721Z  INFO 6513 --- [safeflight] [main] com.safelight.SafeflightApplication      : Started SafeflightApplication in 1.023 seconds (process running for 1.492)
+2026-01-30T22:12:52.369Z  INFO 6513 --- [safeflight] [http-nio-8080-exec-1] o.a.c.c.C.[Tomcat].[localhost].[/]       : Initializing Spring DispatcherServlet 'dispatcherServlet'
+2026-01-30T22:12:52.370Z  INFO 6513 --- [safeflight] [http-nio-8080-exec-1] o.s.web.servlet.DispatcherServlet        : Initializing Servlet 'dispatcherServlet'
+2026-01-30T22:12:52.371Z  INFO 6513 --- [safeflight] [http-nio-8080-exec-1] o.s.web.servlet.DispatcherServlet        : Completed initialization in 1 ms
+2026-01-30T22:16:31.982Z  INFO 6513 --- [safeflight] [SpringApplicationShutdownHook] o.s.boot.tomcat.GracefulShutdown         : Commencing graceful shutdown. Waiting for active requests to complete
+2026-01-30T22:16:31.994Z  INFO 6513 --- [safeflight] [tomcat-shutdown] o.s.boot.tomcat.GracefulShutdown         : Graceful shutdown complete
