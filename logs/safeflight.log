@@ -90,3 +90,7 @@
 2026-01-30T22:12:52.371Z  INFO 6513 --- [safeflight] [http-nio-8080-exec-1] o.s.web.servlet.DispatcherServlet        : Completed initialization in 1 ms
 2026-01-30T22:16:31.982Z  INFO 6513 --- [safeflight] [SpringApplicationShutdownHook] o.s.boot.tomcat.GracefulShutdown         : Commencing graceful shutdown. Waiting for active requests to complete
 2026-01-30T22:16:31.994Z  INFO 6513 --- [safeflight] [tomcat-shutdown] o.s.boot.tomcat.GracefulShutdown         : Graceful shutdown complete
+2026-01-30T22:45:02.756Z  INFO 8882 --- [safeflight] [Test worker] c.safelight.SafeflightApplicationTests   : Starting SafeflightApplicationTests using Java 24.0.2 with PID 8882 (started by harrish in /Users/harrish/Desktop/sqp-project/project code/safeflight)
+2026-01-30T22:45:02.757Z  INFO 8882 --- [safeflight] [Test worker] c.safelight.SafeflightApplicationTests   : No active profile set, falling back to 1 default profile: "default"
+2026-01-30T22:45:03.264Z  INFO 8882 --- [safeflight] [Test worker] o.s.b.w.a.WelcomePageHandlerMapping      : Adding welcome page: class path resource [static/index.html]
+2026-01-30T22:45:03.409Z  INFO 8882 --- [safeflight] [Test worker] c.safelight.SafeflightApplicationTests   : Started SafeflightApplicationTests in 0.8 seconds (process running for 1.551)
