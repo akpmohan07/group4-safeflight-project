@@ -20,9 +20,25 @@ repositories {
 }
 
 dependencies {
-    implementation 'org.springframework.boot:spring-boot-starter'
-    implementation 'org.springframework.boot:spring-boot-starter-web'
-    testImplementation 'org.springframework.boot:spring-boot-starter-test'
+    // Spring Boot starters - exclude default Logback
+    implementation('org.springframework.boot:spring-boot-starter') {
+        exclude group: 'org.springframework.boot', module: 'spring-boot-starter-logging'
+    }
+    implementation('org.springframework.boot:spring-boot-starter-web') {
+        exclude group: 'org.springframework.boot', module: 'spring-boot-starter-logging'
+    }
+
+    // Add Log4j2
+    implementation 'org.springframework.boot:spring-boot-starter-log4j2'
+
+    // Test dependencies - exclude conflicting loggers
+    testImplementation('org.springframework.boot:spring-boot-starter-test') {
+        exclude group: 'org.springframework.boot', module: 'spring-boot-starter-logging'
+        exclude group: 'org.apache.logging.log4j', module: 'log4j-to-slf4j'
+    }
+    testImplementation('org.springframework.boot:spring-boot-starter-log4j2') {
+        exclude group: 'org.apache.logging.log4j', module: 'log4j-to-slf4j'
+    }
     testRuntimeOnly 'org.junit.platform:junit-platform-launcher'
 }
 
