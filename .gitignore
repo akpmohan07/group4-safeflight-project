@@ -35,3 +35,15 @@ out/
 
 ### VS Code ###
 .vscode/
+
+### React Build Outputs ###
+src/main/resources/static/
+src/main/webapp/build/
+src/main/webapp/node_modules/
+
+### OS ###
+.DS_Store
+Thumbs.db
+
+### Logs ###
+*.log
