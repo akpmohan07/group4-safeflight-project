@@ -1,16 +1,15 @@
 package com.safelight;
 
-import org.apache.logging.log4j.LogManager;
-import org.apache.logging.log4j.Logger;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.boot.SpringApplication;
 import org.springframework.boot.autoconfigure.SpringBootApplication;
 
+@Slf4j
 @SpringBootApplication
 public class SafeflightApplication {
-    private static final Logger logger = LogManager.getLogger(SafeflightApplication.class);
-	public static void main(String[] args) {
-        logger.info("Starting Safeflight Application");
-		SpringApplication.run(SafeflightApplication.class, args);
-	}
 
+    public static void main(String[] args) {
+        log.info("Starting Safeflight Application");
+        SpringApplication.run(SafeflightApplication.class, args);
+    }
 }
