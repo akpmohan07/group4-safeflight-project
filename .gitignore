@@ -49,11 +49,12 @@ Thumbs.db
 *.log
 
 
-### Java ###
+# https://github.com/github/gitignore/blob/main/Java.gitignore
 # Compiled class file
 *.class
 
-
+# Log file
+*.log
 
 # BlueJ files
 *.ctxt
