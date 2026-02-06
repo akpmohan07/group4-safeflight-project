@@ -3,13 +3,11 @@ name: CI/CD Pipeline
 on:
   push:
     branches:
-      - main
-      - develop
       - SAFEFLIGHT_HARRISH
   pull_request:
     branches:
       - main
-      - develop
+      - dev
   workflow_dispatch:
 
 env:
