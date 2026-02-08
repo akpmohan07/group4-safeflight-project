@@ -3,7 +3,7 @@ name: CI/CD Pipeline
 on:
   push:
     branches:
-      - SAFEFLIGHT_HARRISH
+      - SAFEFLIGHT_*
   pull_request:
     branches:
       - main
