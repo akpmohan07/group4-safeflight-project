@@ -10,6 +10,7 @@ public class SafeflightApplication {
 
     public static void main(String[] args) {
         log.info("Starting Safeflight Application");
+        log.info("Testing to trigger github workflow");
         SpringApplication.run(SafeflightApplication.class, args);
     }
 }
