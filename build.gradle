@@ -1,0 +1,106 @@
+plugins {
+    id 'java'
+    id 'org.springframework.boot' version '4.0.2'
+    id 'io.spring.dependency-management' version '1.1.7'
+    id 'com.github.node-gradle.node' version '7.0.1'
+}
+
+group = 'com.safelight'
+version = '0.0.1-SNAPSHOT'
+description = 'Flight Ticket Booking System'
+
+java {
+    toolchain {
+        languageVersion = JavaLanguageVersion.of(24)
+    }
+}
+
+repositories {
+    mavenCentral()
+}
+
+dependencies {
+    // Spring Boot starters - exclude default Logback
+    implementation('org.springframework.boot:spring-boot-starter') {
+        exclude group: 'org.springframework.boot', module: 'spring-boot-starter-logging'
+    }
+    implementation('org.springframework.boot:spring-boot-starter-web') {
+        exclude group: 'org.springframework.boot', module: 'spring-boot-starter-logging'
+    }
+
+    // Add Log4j2
+    implementation 'org.springframework.boot:spring-boot-starter-log4j2'
+
+    // Test dependencies - exclude conflicting loggers
+    testImplementation('org.springframework.boot:spring-boot-starter-test') {
+        exclude group: 'org.springframework.boot', module: 'spring-boot-starter-logging'
+        exclude group: 'org.apache.logging.log4j', module: 'log4j-to-slf4j'
+    }
+    testImplementation('org.springframework.boot:spring-boot-starter-log4j2') {
+        exclude group: 'org.apache.logging.log4j', module: 'log4j-to-slf4j'
+    }
+    testRuntimeOnly 'org.junit.platform:junit-platform-launcher'
+
+    // Lombok
+    compileOnly 'org.projectlombok:lombok'
+    annotationProcessor 'org.projectlombok:lombok'
+}
+
+// Node.js configuration
+node {
+    version = '24.13.0'  // Latest LTS version
+    npmVersion = '11.6.2'  // Comes with Node 24.13.0
+    download = true
+    workDir = file("${layout.buildDirectory.get()}/nodejs")
+    npmWorkDir = file("${layout.buildDirectory.get()}/npm")
+    nodeProjectDir = file("${project.projectDir}/src/main/webapp")
+}
+
+// Build React application (uses the plugin's npmInstall automatically)
+tasks.register('npmBuild', com.github.gradle.node.npm.task.NpmTask) {
+    dependsOn tasks.named('npmInstall')
+    description = 'Build React application'
+    args.set(['run', 'build'])
+    inputs.dir('src/main/webapp/src')
+    inputs.dir('src/main/webapp/public')
+    inputs.file('src/main/webapp/package.json')
+    outputs.dir('src/main/webapp/build')
+}
+
+// Copy React build output to Spring Boot static resources
+tasks.register('copyReactBuild', Copy) {
+    dependsOn npmBuild
+    description = 'Copy React build to static resources'
+    from 'src/main/webapp/build'
+    into "${project.projectDir}/src/main/resources/static"
+
+    // Ensure the directory exists
+    doFirst {
+        file("${project.projectDir}/src/main/resources/static").mkdirs()
+    }
+}
+
+// Clean React build artifacts
+tasks.register('cleanReactBuild', Delete) {
+    description = 'Clean React build artifacts'
+    delete 'src/main/webapp/build'
+    delete 'src/main/webapp/node_modules'
+    delete "${project.projectDir}/src/main/resources/static"
+}
+
+// Hook into Gradle lifecycle
+tasks.named('clean') {
+    dependsOn cleanReactBuild
+}
+
+tasks.named('compileJava') {
+    dependsOn copyReactBuild
+}
+
+tasks.named('processResources') {
+    dependsOn copyReactBuild
+}
+
+tasks.named('test') {
+    useJUnitPlatform()
+}
