@@ -5,6 +5,7 @@ import com.safelight.dto.SignupRequest;
 import com.safelight.dto.UserResponse;
 import com.safelight.model.User;
 import com.safelight.repository.UserRepository;
+import jakarta.servlet.http.HttpSession;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
@@ -43,7 +44,7 @@ public class AuthController {
     }
 
     @PostMapping("/login")
-    public ResponseEntity<?> login(@RequestBody LoginRequest request) {
+    public ResponseEntity<?> login(@RequestBody LoginRequest request, HttpSession session) {
         Optional<User> userOpt = userRepository.findByEmail(request.getEmail());
         if (userOpt.isEmpty()) {
             return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body("Invalid credentials");
@@ -54,7 +55,30 @@ public class AuthController {
             return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body("Invalid credentials");
         }
 
+        session.setAttribute("USER_ID", user.getId());
         return ResponseEntity.ok(toResponse(user));
+    }
+
+    @GetMapping("/me")
+    public ResponseEntity<?> currentUser(HttpSession session) {
+        Object idAttr = session.getAttribute("USER_ID");
+        if (!(idAttr instanceof Integer)) {
+            return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body("Not logged in");
+        }
+
+        Integer userId = (Integer) idAttr;
+        Optional<User> userOpt = userRepository.findById(userId);
+        if (userOpt.isEmpty()) {
+            return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body("Not logged in");
+        }
+
+        return ResponseEntity.ok(toResponse(userOpt.get()));
+    }
+
+    @PostMapping("/logout")
+    public ResponseEntity<Void> logout(HttpSession session) {
+        session.invalidate();
+        return ResponseEntity.noContent().build();
     }
 
     private UserResponse toResponse(User user) {
