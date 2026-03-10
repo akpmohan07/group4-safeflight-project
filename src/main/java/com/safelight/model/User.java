@@ -25,7 +25,6 @@ public class User {
     private String phone;
     private LocalDate dob;
     private String country;
-    private String nationality;
     private String role;
     
     @OneToMany(mappedBy = "user")
@@ -97,14 +96,6 @@ public class User {
     
     public void setCountry(String country) {
         this.country = country;
-    }
-    
-    public String getNationality() {
-        return nationality;
-    }
-    
-    public void setNationality(String nationality) {
-        this.nationality = nationality;
     }
     
     public String getRole() {
