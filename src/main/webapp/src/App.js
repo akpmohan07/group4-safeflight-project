@@ -6,34 +6,34 @@ import AuthPage from './pages/AuthPage';
 import ProfilePage from './pages/ProfilePage';
 import { AuthProvider, useAuth } from './context/AuthContext';
 
-function AppRoutes() {
+function AppContent() {
   const navigate = useNavigate();
   const { user, setUser } = useAuth();
 
   return (
-    <Routes>
-      <Route
-        path="/"
-        element={
-          <AuthPage
-            onLoginSuccess={(loggedInUser) => {
-              setUser(loggedInUser);
-              navigate('/profile');
-            }}
-          />
-        }
-      />
-      <Route path="/profile" element={<ProfilePage user={user} />} />
-    </Routes>
+    <Layout>
+      <Routes>
+        <Route
+          path="/"
+          element={
+            <AuthPage
+              onLoginSuccess={(loggedInUser) => {
+                setUser(loggedInUser);
+                navigate('/profile');
+              }}
+            />
+          }
+        />
+        <Route path="/profile" element={<ProfilePage user={user} />} />
+      </Routes>
+    </Layout>
   );
 }
 
 function App() {
   return (
     <AuthProvider>
-      <Layout>
-        <AppRoutes />
-      </Layout>
+      <AppContent />
     </AuthProvider>
   );
 }
