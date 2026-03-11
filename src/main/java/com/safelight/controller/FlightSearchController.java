@@ -2,6 +2,8 @@ package com.safelight.controller;
 
 import com.safelight.dto.DestinationResponse;
 import com.safelight.dto.FlightSearchResultDto;
+import com.safelight.dto.SeatMapResponse;
+import com.safelight.model.BookingPassenger;
 import com.safelight.model.Destination;
 import com.safelight.model.FlightSchedule;
 import com.safelight.repository.DestinationRepository;
@@ -12,6 +14,7 @@ import org.springframework.web.bind.annotation.*;
 
 import java.time.LocalDate;
 import java.util.List;
+import java.util.Optional;
 import java.util.stream.Collectors;
 
 @RestController
@@ -49,6 +52,37 @@ public class FlightSearchController {
                 .collect(Collectors.toList());
 
         return ResponseEntity.ok(results);
+    }
+
+    @GetMapping("/flights/{scheduleId}/seatmap")
+    public ResponseEntity<?> getSeatMap(@PathVariable Integer scheduleId) {
+        Optional<FlightSchedule> scheduleOpt = flightScheduleRepository.findById(scheduleId);
+        if (scheduleOpt.isEmpty()) {
+            return ResponseEntity.notFound().build();
+        }
+
+        FlightSchedule schedule = scheduleOpt.get();
+        SeatMapResponse dto = new SeatMapResponse();
+        dto.setScheduleId(schedule.getId());
+        dto.setTravelDate(schedule.getTravelDate());
+        dto.setTravelTime(schedule.getTravelTime());
+        dto.setFlightCode(schedule.getFlight().getFlightCode());
+        dto.setFlightName(schedule.getFlight().getFlightName());
+        dto.setAirlineName(schedule.getFlight().getAirline().getName());
+        dto.setFromAirport(schedule.getRoute().getFromDestination().getAirport());
+        dto.setToAirport(schedule.getRoute().getToDestination().getAirport());
+        dto.setSeatMapping(schedule.getFlight().getFlightModel().getSeatMapping());
+
+        java.util.List<String> bookedSeats = schedule.getBookings().stream()
+                .filter(b -> b.getStatus() == null || !b.getStatus().equalsIgnoreCase("CANCELLED"))
+                .flatMap(b -> b.getBookingPassengers().stream())
+                .map(BookingPassenger::getSeatNo)
+                .filter(seatNo -> seatNo != null && !seatNo.isBlank())
+                .distinct()
+                .toList();
+        dto.setBookedSeats(bookedSeats);
+
+        return ResponseEntity.ok(dto);
     }
 
     private DestinationResponse toDestinationResponse(Destination d) {
