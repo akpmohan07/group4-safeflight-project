@@ -112,6 +112,10 @@ tasks.named('bootRun') {
     dependsOn copyReactBuild
 }
 
+tasks.named('processResources') {
+    dependsOn copyReactBuild
+}
+
 tasks.named('test') {
     useJUnitPlatform()
     finalizedBy tasks.named('jacocoTestReport')
