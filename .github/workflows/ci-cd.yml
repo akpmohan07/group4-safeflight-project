@@ -184,6 +184,7 @@ jobs:
     permissions:
       pull-requests: write
       contents: read
+      actions: read
 
     steps:
       - name: Download Backend Unit Test Results
@@ -221,10 +222,75 @@ jobs:
           path: artifacts/backend-coverage
         continue-on-error: true
 
+      - name: Download Backend Unit HTML Report
+        uses: actions/download-artifact@v4
+        with:
+          name: backend-unit-html-report
+          path: artifacts/html/backend-unit
+        continue-on-error: true
+
+      - name: Download Backend Integration HTML Report
+        uses: actions/download-artifact@v4
+        with:
+          name: backend-integration-html-report
+          path: artifacts/html/backend-integration
+        continue-on-error: true
+
+      - name: Download Backend JaCoCo HTML Report
+        uses: actions/download-artifact@v4
+        with:
+          name: backend-jacoco-html-report
+          path: artifacts/html/backend-jacoco
+        continue-on-error: true
+
+      - name: Download Frontend HTML Coverage Report
+        uses: actions/download-artifact@v4
+        with:
+          name: frontend-lcov-html-report
+          path: artifacts/html/frontend-lcov
+        continue-on-error: true
+
+      - name: Build Combined HTML Reports Folder
+        run: |
+          mkdir -p aggregated-reports
+          [ -d artifacts/html/backend-unit ] && cp -R artifacts/html/backend-unit aggregated-reports/ || true
+          [ -d artifacts/html/backend-integration ] && cp -R artifacts/html/backend-integration aggregated-reports/ || true
+          [ -d artifacts/html/backend-jacoco ] && cp -R artifacts/html/backend-jacoco aggregated-reports/ || true
+          [ -d artifacts/html/frontend-lcov ] && cp -R artifacts/html/frontend-lcov aggregated-reports/ || true
+          echo "Combined HTML test reports from this workflow run." > aggregated-reports/README.txt
+
+      - name: Upload Combined Test Reports Artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: all-test-reports
+          path: aggregated-reports
+          if-no-files-found: warn
+
+      - name: Resolve Combined Artifact Download URL
+        id: artifact-url
+        uses: actions/github-script@v7
+        with:
+          script: |
+            const owner = context.repo.owner;
+            const repo = context.repo.repo;
+            const run_id = context.runId;
+            const artifacts = await github.paginate(github.rest.actions.listWorkflowRunArtifacts, {
+              owner,
+              repo,
+              run_id,
+              per_page: 100
+            });
+            const combined = artifacts.find(a => a.name === 'all-test-reports');
+            const url = combined
+              ? `https://api.github.com/repos/${owner}/${repo}/actions/artifacts/${combined.id}/zip`
+              : '';
+            core.setOutput('direct_zip_url', url);
+
       - name: Build PR Comment Body
         id: report
         env:
           RUN_URL: ${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }}
+          DIRECT_ZIP_URL: ${{ steps.artifact-url.outputs.direct_zip_url }}
         run: |
           python3 - <<'PY'
           import glob
@@ -326,11 +392,16 @@ jobs:
 
           ### HTML Reports
           - [CI Run Artifacts]({os.getenv('RUN_URL')})
-          - Backend Unit HTML artifact: `backend-unit-html-report`
-          - Backend Integration HTML artifact: `backend-integration-html-report`
-          - Backend JaCoCo HTML artifact: `backend-jacoco-html-report`
-          - Frontend Coverage HTML artifact: `frontend-lcov-html-report`
+          - Combined artifact: `all-test-reports`
           """
+
+          direct_zip_url = os.getenv("DIRECT_ZIP_URL", "").strip()
+          if direct_zip_url:
+              body += f"\n- Direct ZIP link (authenticated): [Download all-test-reports]({direct_zip_url})\n"
+          body += (
+              "\n- Includes: backend unit HTML, backend integration HTML, backend JaCoCo HTML, "
+              "frontend lcov HTML\n"
+          )
 
           with open("pr_test_report.md", "w", encoding="utf-8") as f:
               f.write(body)
