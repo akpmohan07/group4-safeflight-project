@@ -176,10 +176,100 @@ jobs:
           path: src/main/webapp/coverage/lcov-report
           if-no-files-found: warn
 
+  e2e-tests:
+    name: System E2E Tests
+    runs-on: ubuntu-latest
+
+    services:
+      postgres:
+        image: postgres:16
+        env:
+          POSTGRES_DB: safeflight
+          POSTGRES_USER: safeflight
+          POSTGRES_PASSWORD: safeflight
+        ports:
+          - 5432:5432
+        options: >-
+          --health-cmd "pg_isready -U safeflight -d safeflight"
+          --health-interval 10s
+          --health-timeout 5s
+          --health-retries 5
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Set up JDK 24
+        uses: actions/setup-java@v4
+        with:
+          java-version: '24'
+          distribution: 'temurin'
+          cache: 'gradle'
+
+      - name: Set up Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: '24.13.0'
+          cache: 'npm'
+          cache-dependency-path: 'src/main/webapp/package-lock.json'
+
+      - name: Grant execute permission for gradlew
+        run: chmod +x gradlew
+
+      - name: Install frontend dependencies and Playwright browser
+        working-directory: src/main/webapp
+        run: |
+          npm ci
+          npx playwright install --with-deps chromium
+
+      - name: Start backend application
+        env:
+          SPRING_DATASOURCE_URL: jdbc:postgresql://localhost:5432/safeflight
+          SPRING_DATASOURCE_USERNAME: safeflight
+          SPRING_DATASOURCE_PASSWORD: safeflight
+        run: |
+          ./gradlew bootRun > bootrun.log 2>&1 &
+          echo "BootRun started"
+
+      - name: Wait for backend readiness
+        run: |
+          for i in {1..60}; do
+            if curl -sSf http://localhost:8080/ > /dev/null; then
+              echo "Backend is ready"
+              exit 0
+            fi
+            echo "Waiting for backend... attempt $i/60"
+            sleep 5
+          done
+          echo "Backend did not become ready in time"
+          exit 1
+
+      - name: Run Playwright E2E (headless in CI)
+        working-directory: src/main/webapp
+        env:
+          E2E_BASE_URL: http://localhost:8080
+        run: npm run e2e:ci
+
+      - name: Upload Playwright HTML Report
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: playwright-html-report
+          path: src/main/webapp/playwright-report
+          if-no-files-found: warn
+
+      - name: Upload Playwright Test Results
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: playwright-test-results
+          path: src/main/webapp/test-results
+          if-no-files-found: warn
+
   pr-test-report:
     name: PR Test Report Comment
     if: always() && github.event_name == 'pull_request'
-    needs: [backend-unit-tests, backend-integration-tests, frontend-tests]
+    needs: [backend-unit-tests, backend-integration-tests, frontend-tests, e2e-tests]
     runs-on: ubuntu-latest
     permissions:
       pull-requests: write
@@ -250,6 +340,13 @@ jobs:
           path: artifacts/html/frontend-lcov
         continue-on-error: true
 
+      - name: Download Playwright HTML Report
+        uses: actions/download-artifact@v4
+        with:
+          name: playwright-html-report
+          path: artifacts/html/playwright
+        continue-on-error: true
+
       - name: Build Combined HTML Reports Folder
         run: |
           mkdir -p aggregated-reports
@@ -257,6 +354,7 @@ jobs:
           [ -d artifacts/html/backend-integration ] && cp -R artifacts/html/backend-integration aggregated-reports/ || true
           [ -d artifacts/html/backend-jacoco ] && cp -R artifacts/html/backend-jacoco aggregated-reports/ || true
           [ -d artifacts/html/frontend-lcov ] && cp -R artifacts/html/frontend-lcov aggregated-reports/ || true
+          [ -d artifacts/html/playwright ] && cp -R artifacts/html/playwright aggregated-reports/ || true
           echo "Combined HTML test reports from this workflow run." > aggregated-reports/README.txt
 
       - name: Upload Combined Test Reports Artifact
@@ -379,7 +477,7 @@ jobs:
           """
           body += (
               "\n- Includes: backend unit HTML, backend integration HTML, backend JaCoCo HTML, "
-              "frontend lcov HTML\n"
+              "frontend lcov HTML, playwright E2E HTML\n"
           )
 
           with open("pr_test_report.md", "w", encoding="utf-8") as f:
@@ -394,7 +492,7 @@ jobs:
 
   build-artifact:
     name: Build Application
-    needs: [backend-unit-tests, backend-integration-tests, frontend-tests]
+    needs: [backend-unit-tests, backend-integration-tests, frontend-tests, e2e-tests]
     runs-on: ubuntu-latest
 
     steps:

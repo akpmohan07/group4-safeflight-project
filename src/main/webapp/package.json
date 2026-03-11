@@ -21,7 +21,12 @@
     "test": "react-scripts test",
     "coverage": "react-scripts test --watchAll=false --coverage",
     "coverage:check": "react-scripts test --watchAll=false --coverage --ci",
+    "e2e": "playwright test --headed",
+    "e2e:ci": "playwright test",
     "eject": "react-scripts eject"
+  },
+  "devDependencies": {
+    "@playwright/test": "^1.58.2"
   },
   "jest": {
     "collectCoverageFrom": [

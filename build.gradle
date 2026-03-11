@@ -110,6 +110,7 @@ tasks.named('bootRun') {
 }
 
 tasks.named('processResources') {
+    duplicatesStrategy = org.gradle.api.file.DuplicatesStrategy.EXCLUDE
     from(generatedFrontendStaticDir) {
         into 'static'
     }
