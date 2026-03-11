@@ -5,6 +5,7 @@ import Layout from './components/Layout';
 import AuthPage from './pages/AuthPage';
 import ProfilePage from './pages/ProfilePage';
 import SearchPage from './pages/SearchPage';
+import SeatMapPage from './pages/SeatMapPage';
 import { AuthProvider, useAuth } from './context/AuthContext';
 
 function AppContent() {
@@ -31,6 +32,7 @@ function AppContent() {
         />
         <Route path="/profile" element={<ProfilePage user={user} />} />
         <Route path="/search" element={<SearchPage />} />
+        <Route path="/flights/:scheduleId" element={<SeatMapPage />} />
       </Routes>
     </Layout>
   );

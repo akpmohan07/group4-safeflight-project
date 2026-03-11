@@ -1,9 +1,10 @@
 import React, { useEffect, useState } from 'react';
 import { useAuth } from '../context/AuthContext';
-import { Link } from 'react-router-dom';
+import { Link, useNavigate } from 'react-router-dom';
 
 function SearchPage() {
   const { user } = useAuth();
+  const navigate = useNavigate();
   const [destinations, setDestinations] = useState([]);
   const [fromId, setFromId] = useState('');
   const [toId, setToId] = useState('');
@@ -135,7 +136,11 @@ function SearchPage() {
                       </thead>
                       <tbody>
                         {results.map((r) => (
-                          <tr key={r.scheduleId}>
+                          <tr
+                            key={r.scheduleId}
+                            style={{ cursor: 'pointer' }}
+                            onClick={() => navigate(`/flights/${r.scheduleId}`)}
+                          >
                             <td>{r.airlineName}</td>
                             <td>{r.flightCode}</td>
                             <td>{r.travelTime}</td>
