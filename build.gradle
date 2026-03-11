@@ -43,6 +43,10 @@ dependencies {
         exclude group: 'org.springframework.boot', module: 'spring-boot-starter-logging'
         exclude group: 'org.apache.logging.log4j', module: 'log4j-to-slf4j'
     }
+    testImplementation('org.springframework.boot:spring-boot-starter-webmvc-test') {
+        exclude group: 'org.springframework.boot', module: 'spring-boot-starter-logging'
+        exclude group: 'org.apache.logging.log4j', module: 'log4j-to-slf4j'
+    }
     testImplementation('org.springframework.boot:spring-boot-starter-log4j2') {
         exclude group: 'org.apache.logging.log4j', module: 'log4j-to-slf4j'
     }
@@ -100,17 +104,32 @@ tasks.named('clean') {
     dependsOn cleanReactBuild
 }
 
-tasks.named('compileJava') {
+tasks.named('bootJar') {
     dependsOn copyReactBuild
 }
 
-tasks.named('processResources') {
+tasks.named('bootRun') {
     dependsOn copyReactBuild
 }
 
 tasks.named('test') {
     useJUnitPlatform()
     finalizedBy tasks.named('jacocoTestReport')
+}
+
+tasks.register('unitTest', Test) {
+    description = 'Runs backend unit tests only'
+    group = 'verification'
+    useJUnitPlatform()
+    exclude '**/*IntegrationTest.class'
+}
+
+tasks.register('integrationTest', Test) {
+    description = 'Runs backend integration tests only'
+    group = 'verification'
+    useJUnitPlatform()
+    include '**/*IntegrationTest.class'
+    shouldRunAfter tasks.named('unitTest')
 }
 
 jacoco {
