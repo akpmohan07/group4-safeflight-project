@@ -50,11 +50,12 @@ INSERT INTO users (id, fname, lname, email, password, phone, dob, country, role)
   (2, 'Airline', 'Admin', 'airline.admin@safeflight.com', 'admin123', NULL, '1990-01-01', 'India', 'AIRLINE_ADMIN')
 ON CONFLICT (id) DO NOTHING;
 
+SELECT setval('users_id_seq', (SELECT COALESCE(MAX(id), 1) FROM users), true);
+
 INSERT INTO airline_user (id, airline_id, user_id) VALUES
   (1, 1, 2)
 ON CONFLICT (id) DO NOTHING;
 
--- Dummy passenger and booking data for seat selection demo
 INSERT INTO passengers (id, fname, lname, dob, phone, email, passport) VALUES
   (1, 'Test', 'Passenger', '1995-05-15', '9999999999', 'test.passenger@safeflight.com', 'P1234567')
 ON CONFLICT (id) DO NOTHING;
