@@ -6,8 +6,8 @@ INSERT INTO airlines (id, name, country) VALUES
 ON CONFLICT (id) DO NOTHING;
 
 INSERT INTO flight_model (id, model_number, model_name, manufacturer, seat_mapping) VALUES
-  (1, 'A320', 'Airbus A320', 'Airbus', '{"rows": 30, "seatsPerRow": 6}'),
-  (2, 'B737', 'Boeing 737', 'Boeing', '{"flightId":"AW205","aircraftConfig":{"flight_name":"boeing-777","flight_uid":"boeing_777","structure":{"rows":42,"columns":10,"alignment":[{"type":"First Class","seat_layout":[3,4,3],"row_count":4},{"type":"Business Class","seat_layout":[2,2,2],"row_count":6},{"type":"Premium Economy","seat_layout":[3,4,3],"row_count":8},{"type":"Economy Class","seat_layout":[3,4,3],"row_count":24}]}},"seatPricing":{"First Class":1200,"Business Class":800,"Premium Economy":600,"Economy Class":300}}')
+  (1, 'A320', 'Airbus A320', 'Airbus', '{"flightId":"AW205","aircraftConfig":{"flight_name":"boeing-777","flight_uid":"boeing_777","structure":{"rows":42,"columns":10,"alignment":[{"type":"First Class","seat_layout":[3,4,3],"row_count":4},{"type":"Business Class","seat_layout":[2,2,2],"row_count":6},{"type":"Premium Economy","seat_layout":[3,4,3],"row_count":8},{"type":"Economy Class","seat_layout":[3,4,3],"row_count":24}]}},"seatPricing":{"First Class":2500,"Business Class":1500,"Premium Economy":800,"Economy Class":300}}'),
+  (2, 'B737', 'Boeing 737', 'Boeing', '{"flightId":"AW205","aircraftConfig":{"flight_name":"boeing-777","flight_uid":"boeing_777","structure":{"rows":42,"columns":10,"alignment":[{"type":"First Class","seat_layout":[3,4,3],"row_count":4},{"type":"Business Class","seat_layout":[2,2,2],"row_count":6},{"type":"Premium Economy","seat_layout":[3,4,3],"row_count":8},{"type":"Economy Class","seat_layout":[3,4,3],"row_count":24}]}},"seatPricing":{"First Class":2500,"Business Class":1500,"Premium Economy":800,"Economy Class":300}}')
 ON CONFLICT (id) DO NOTHING;
 
 INSERT INTO flights (id, airline_id, flight_name, flight_code, flight_model_id) VALUES
