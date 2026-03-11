@@ -41,7 +41,7 @@ jobs:
         uses: actions/upload-artifact@v4
         with:
           name: backend-unit-test-results
-          path: build/test-results/unitTest/*.xml
+          path: build/test-results/unitTest
           if-no-files-found: warn
 
   backend-integration-tests:
@@ -96,7 +96,7 @@ jobs:
         uses: actions/upload-artifact@v4
         with:
           name: backend-integration-test-results
-          path: build/test-results/integrationTest/*.xml
+          path: build/test-results/integrationTest
           if-no-files-found: warn
 
       - name: Upload Backend Coverage Summary
@@ -104,7 +104,7 @@ jobs:
         uses: actions/upload-artifact@v4
         with:
           name: backend-coverage-summary
-          path: build/reports/jacoco/test/jacocoTestReport.xml
+          path: build/reports/jacoco/test
           if-no-files-found: warn
 
   frontend-tests:
@@ -126,14 +126,14 @@ jobs:
         working-directory: src/main/webapp
         run: |
           npm ci
-          npm run coverage:check -- --json --outputFile=coverage/test-results.json
+          npm run coverage:check -- --json --outputFile=coverage/test-results.json --coverageReporters=json-summary --coverageReporters=lcov --coverageReporters=text
 
       - name: Upload Frontend Coverage Summary
         if: always()
         uses: actions/upload-artifact@v4
         with:
           name: frontend-coverage-summary
-          path: src/main/webapp/coverage/coverage-summary.json
+          path: src/main/webapp/coverage
           if-no-files-found: warn
 
       - name: Upload Frontend Test Results
@@ -141,7 +141,7 @@ jobs:
         uses: actions/upload-artifact@v4
         with:
           name: frontend-test-results
-          path: src/main/webapp/coverage/test-results.json
+          path: src/main/webapp/coverage
           if-no-files-found: warn
 
   pr-test-report:
@@ -221,8 +221,8 @@ jobs:
               pass_pct = round((passed / tests) * 100, 2) if tests else 0.0
               return tests, passed, failures, errors, skipped, pass_pct
 
-          u = junit_summary("artifacts/backend-unit/*.xml")
-          i = junit_summary("artifacts/backend-integration/*.xml")
+          u = junit_summary("artifacts/backend-unit/**/*.xml")
+          i = junit_summary("artifacts/backend-integration/**/*.xml")
 
           cov_line = "N/A"
           cov_func = "N/A"
@@ -231,7 +231,7 @@ jobs:
           backend_line_cov = "N/A"
           f_total = f_passed = f_failed = f_errors = f_skipped = 0
           f_pass_pct = 0.0
-          cov_files = glob.glob("artifacts/frontend/coverage-summary.json")
+          cov_files = glob.glob("artifacts/frontend/**/coverage-summary.json", recursive=True)
           if cov_files:
               with open(cov_files[0], "r", encoding="utf-8") as f:
                   data = json.load(f)
@@ -241,7 +241,7 @@ jobs:
                   cov_stmt = f"{total.get('statements', {}).get('pct', 'N/A')}%"
                   cov_branch = f"{total.get('branches', {}).get('pct', 'N/A')}%"
 
-          frontend_test_files = glob.glob("artifacts/frontend-tests/test-results.json")
+          frontend_test_files = glob.glob("artifacts/frontend-tests/**/test-results.json", recursive=True)
           if frontend_test_files:
               try:
                   with open(frontend_test_files[0], "r", encoding="utf-8") as f:
@@ -255,7 +255,7 @@ jobs:
               except Exception:
                   pass
 
-          backend_cov_files = glob.glob("artifacts/backend-coverage/jacocoTestReport.xml")
+          backend_cov_files = glob.glob("artifacts/backend-coverage/**/jacocoTestReport.xml", recursive=True)
           if backend_cov_files:
               try:
                   root = ET.parse(backend_cov_files[0]).getroot()
