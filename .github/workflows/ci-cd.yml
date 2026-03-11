@@ -36,6 +36,14 @@ jobs:
       - name: Run Backend Unit Tests
         run: ./gradlew unitTest
 
+      - name: Upload Backend Unit Test Results
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: backend-unit-test-results
+          path: build/test-results/unitTest/*.xml
+          if-no-files-found: warn
+
   backend-integration-tests:
     name: Backend Integration Tests
     runs-on: ubuntu-latest
@@ -76,6 +84,29 @@ jobs:
           SPRING_DATASOURCE_PASSWORD: safeflight
         run: ./gradlew integrationTest
 
+      - name: Generate Backend Coverage Report
+        env:
+          SPRING_DATASOURCE_URL: jdbc:postgresql://localhost:5432/safeflight
+          SPRING_DATASOURCE_USERNAME: safeflight
+          SPRING_DATASOURCE_PASSWORD: safeflight
+        run: ./gradlew coverage
+
+      - name: Upload Backend Integration Test Results
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: backend-integration-test-results
+          path: build/test-results/integrationTest/*.xml
+          if-no-files-found: warn
+
+      - name: Upload Backend Coverage Summary
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: backend-coverage-summary
+          path: build/reports/jacoco/test/jacocoTestReport.xml
+          if-no-files-found: warn
+
   frontend-tests:
     name: Frontend Tests
     runs-on: ubuntu-latest
@@ -95,7 +126,180 @@ jobs:
         working-directory: src/main/webapp
         run: |
           npm ci
-          npm run coverage:check
+          npm run coverage:check -- --json --outputFile=coverage/test-results.json
+
+      - name: Upload Frontend Coverage Summary
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: frontend-coverage-summary
+          path: src/main/webapp/coverage/coverage-summary.json
+          if-no-files-found: warn
+
+      - name: Upload Frontend Test Results
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: frontend-test-results
+          path: src/main/webapp/coverage/test-results.json
+          if-no-files-found: warn
+
+  pr-test-report:
+    name: PR Test Report Comment
+    if: always() && github.event_name == 'pull_request'
+    needs: [backend-unit-tests, backend-integration-tests, frontend-tests]
+    runs-on: ubuntu-latest
+    permissions:
+      pull-requests: write
+      contents: read
+
+    steps:
+      - name: Download Backend Unit Test Results
+        uses: actions/download-artifact@v4
+        with:
+          name: backend-unit-test-results
+          path: artifacts/backend-unit
+        continue-on-error: true
+
+      - name: Download Backend Integration Test Results
+        uses: actions/download-artifact@v4
+        with:
+          name: backend-integration-test-results
+          path: artifacts/backend-integration
+        continue-on-error: true
+
+      - name: Download Frontend Coverage Summary
+        uses: actions/download-artifact@v4
+        with:
+          name: frontend-coverage-summary
+          path: artifacts/frontend
+        continue-on-error: true
+
+      - name: Download Frontend Test Results
+        uses: actions/download-artifact@v4
+        with:
+          name: frontend-test-results
+          path: artifacts/frontend-tests
+        continue-on-error: true
+
+      - name: Download Backend Coverage Summary
+        uses: actions/download-artifact@v4
+        with:
+          name: backend-coverage-summary
+          path: artifacts/backend-coverage
+        continue-on-error: true
+
+      - name: Build PR Comment Body
+        id: report
+        run: |
+          python3 - <<'PY'
+          import glob
+          import json
+          import os
+          import xml.etree.ElementTree as ET
+
+          def junit_summary(pattern):
+              files = glob.glob(pattern)
+              tests = failures = errors = skipped = 0
+              for file in files:
+                  try:
+                      root = ET.parse(file).getroot()
+                  except Exception:
+                      continue
+                  if root.tag == "testsuite":
+                      tests += int(root.attrib.get("tests", 0))
+                      failures += int(root.attrib.get("failures", 0))
+                      errors += int(root.attrib.get("errors", 0))
+                      skipped += int(root.attrib.get("skipped", 0))
+                  elif root.tag == "testsuites":
+                      for suite in root.findall("testsuite"):
+                          tests += int(suite.attrib.get("tests", 0))
+                          failures += int(suite.attrib.get("failures", 0))
+                          errors += int(suite.attrib.get("errors", 0))
+                          skipped += int(suite.attrib.get("skipped", 0))
+              passed = tests - failures - errors - skipped
+              pass_pct = round((passed / tests) * 100, 2) if tests else 0.0
+              return tests, passed, failures, errors, skipped, pass_pct
+
+          u = junit_summary("artifacts/backend-unit/*.xml")
+          i = junit_summary("artifacts/backend-integration/*.xml")
+
+          cov_line = "N/A"
+          cov_func = "N/A"
+          cov_stmt = "N/A"
+          cov_branch = "N/A"
+          backend_line_cov = "N/A"
+          f_total = f_passed = f_failed = f_errors = f_skipped = 0
+          f_pass_pct = 0.0
+          cov_files = glob.glob("artifacts/frontend/coverage-summary.json")
+          if cov_files:
+              with open(cov_files[0], "r", encoding="utf-8") as f:
+                  data = json.load(f)
+                  total = data.get("total", {})
+                  cov_line = f"{total.get('lines', {}).get('pct', 'N/A')}%"
+                  cov_func = f"{total.get('functions', {}).get('pct', 'N/A')}%"
+                  cov_stmt = f"{total.get('statements', {}).get('pct', 'N/A')}%"
+                  cov_branch = f"{total.get('branches', {}).get('pct', 'N/A')}%"
+
+          frontend_test_files = glob.glob("artifacts/frontend-tests/test-results.json")
+          if frontend_test_files:
+              try:
+                  with open(frontend_test_files[0], "r", encoding="utf-8") as f:
+                      r = json.load(f)
+                      f_total = int(r.get("numTotalTests", 0))
+                      f_passed = int(r.get("numPassedTests", 0))
+                      f_failed = int(r.get("numFailedTests", 0))
+                      f_skipped = int(r.get("numPendingTests", 0))
+                      f_errors = int(r.get("numRuntimeErrorTestSuites", 0))
+                      f_pass_pct = round((f_passed / f_total) * 100, 2) if f_total else 0.0
+              except Exception:
+                  pass
+
+          backend_cov_files = glob.glob("artifacts/backend-coverage/jacocoTestReport.xml")
+          if backend_cov_files:
+              try:
+                  root = ET.parse(backend_cov_files[0]).getroot()
+                  line_counter = next(
+                      (c for c in root.findall("counter") if c.attrib.get("type") == "LINE"),
+                      None,
+                  )
+                  if line_counter is not None:
+                      covered = int(line_counter.attrib.get("covered", 0))
+                      missed = int(line_counter.attrib.get("missed", 0))
+                      total_lines = covered + missed
+                      backend_line_cov = (
+                          f"{round((covered / total_lines) * 100, 2)}%" if total_lines else "0.0%"
+                      )
+              except Exception:
+                  backend_line_cov = "N/A"
+
+          body = f"""## Test Report
+
+          | Suite | Total | Passed | Pass % | Failed | Errors | Skipped |
+          |---|---:|---:|---:|---:|---:|---:|
+          | Backend Unit | {u[0]} | {u[1]} | {u[5]}% | {u[2]} | {u[3]} | {u[4]} |
+          | Backend Integration | {i[0]} | {i[1]} | {i[5]}% | {i[2]} | {i[3]} | {i[4]} |
+          | Frontend | {f_total} | {f_passed} | {f_pass_pct}% | {f_failed} | {f_errors} | {f_skipped} |
+
+          ### Backend Coverage
+          - Line Coverage: {backend_line_cov}
+
+          ### Frontend Coverage
+          - Line Coverage: {cov_line}
+          - Functions: {cov_func}
+          - Statements: {cov_stmt}
+          - Branches: {cov_branch}
+          """
+
+          with open("pr_test_report.md", "w", encoding="utf-8") as f:
+              f.write(body)
+          PY
+
+      - name: Comment Test Report on PR
+        uses: marocchino/sticky-pull-request-comment@v2
+        with:
+          header: test-report
+          path: pr_test_report.md
 
   build-artifact:
     name: Build Application
