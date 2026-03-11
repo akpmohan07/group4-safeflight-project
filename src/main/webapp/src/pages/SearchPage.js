@@ -21,6 +21,11 @@ function SearchPage() {
   const handleSubmit = async (e) => {
     e.preventDefault();
     if (!fromId || !toId || !date) return;
+
+    const today = new Date().toISOString().split('T')[0];
+    if (date < today) {
+      return;
+    }
     setLoading(true);
     setResults(null);
     try {
@@ -90,6 +95,7 @@ function SearchPage() {
                   className="form-control"
                   value={date}
                   onChange={(e) => setDate(e.target.value)}
+                  min={new Date().toISOString().split('T')[0]}
                   required
                 />
               </div>
