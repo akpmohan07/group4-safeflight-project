@@ -340,6 +340,13 @@ jobs:
           path: artifacts/html/frontend-lcov
         continue-on-error: true
 
+      - name: Download Playwright Test Results
+        uses: actions/download-artifact@v4
+        with:
+          name: playwright-test-results
+          path: artifacts/e2e-tests
+        continue-on-error: true
+
       - name: Download Playwright HTML Report
         uses: actions/download-artifact@v4
         with:
@@ -411,6 +418,8 @@ jobs:
           backend_line_cov = "N/A"
           f_total = f_passed = f_failed = f_errors = f_skipped = 0
           f_pass_pct = 0.0
+          e_total = e_passed = e_failed = e_errors = e_skipped = 0
+          e_pass_pct = 0.0
           cov_files = glob.glob("artifacts/frontend/**/coverage-summary.json", recursive=True)
           if cov_files:
               with open(cov_files[0], "r", encoding="utf-8") as f:
@@ -432,6 +441,26 @@ jobs:
                       f_skipped = int(r.get("numPendingTests", 0))
                       f_errors = int(r.get("numRuntimeErrorTestSuites", 0))
                       f_pass_pct = round((f_passed / f_total) * 100, 2) if f_total else 0.0
+              except Exception:
+                  pass
+
+          e2e_result_files = glob.glob("artifacts/e2e-tests/**/e2e-results.json", recursive=True)
+          if e2e_result_files:
+              try:
+                  with open(e2e_result_files[0], "r", encoding="utf-8") as f:
+                      e = json.load(f)
+                      stats = e.get("stats", {})
+                      expected = int(stats.get("expected", 0))
+                      unexpected = int(stats.get("unexpected", 0))
+                      flaky = int(stats.get("flaky", 0))
+                      skipped = int(stats.get("skipped", 0))
+                      interrupted = int(stats.get("interrupted", 0))
+                      e_total = expected + unexpected + flaky + skipped
+                      e_passed = expected + flaky
+                      e_failed = unexpected
+                      e_errors = interrupted
+                      e_skipped = skipped
+                      e_pass_pct = round((e_passed / e_total) * 100, 2) if e_total else 0.0
               except Exception:
                   pass
 
@@ -460,6 +489,7 @@ jobs:
           | Backend Unit | {u[0]} | {u[1]} | {u[5]}% | {u[2]} | {u[3]} | {u[4]} |
           | Backend Integration | {i[0]} | {i[1]} | {i[5]}% | {i[2]} | {i[3]} | {i[4]} |
           | Frontend | {f_total} | {f_passed} | {f_pass_pct}% | {f_failed} | {f_errors} | {f_skipped} |
+          | E2E (Playwright) | {e_total} | {e_passed} | {e_pass_pct}% | {e_failed} | {e_errors} | {e_skipped} |
 
           ### Backend Coverage
           - Line Coverage: {backend_line_cov}
