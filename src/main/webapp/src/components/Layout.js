@@ -18,12 +18,12 @@ function Layout({ children }) {
           <Link className="navbar-brand fw-semibold" to="/">
             Safeflight
           </Link>
-          <div className="ms-auto d-flex align-items-center gap-2">
+          <div className="ms-auto d-flex align-items-center gap-3">
             {user && (
               <>
-                <span className="small text-muted">
+                <Link className="nav-link text-muted text-decoration-none small" to="/profile" title="Profile">
                   {user.email} ({user.role})
-                </span>
+                </Link>
                 <button type="button" className="btn btn-outline-secondary btn-sm" onClick={handleLogout}>
                   Logout
                 </button>

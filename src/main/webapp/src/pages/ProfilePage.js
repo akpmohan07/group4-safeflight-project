@@ -1,4 +1,5 @@
 import React from 'react';
+import { Link } from 'react-router-dom';
 
 function ProfilePage({ user }) {
   if (!user) {
@@ -8,6 +9,9 @@ function ProfilePage({ user }) {
   return (
     <div className="row justify-content-center">
       <div className="col-md-6">
+        <Link to="/" className="btn btn-outline-secondary btn-sm mb-3">
+          ← Back
+        </Link>
         <div className="card shadow-sm">
           <div className="card-body">
             <h5 className="card-title mb-3">User details</h5>
