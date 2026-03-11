@@ -44,6 +44,14 @@ jobs:
           path: build/test-results/unitTest
           if-no-files-found: warn
 
+      - name: Upload Backend Unit HTML Report
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: backend-unit-html-report
+          path: build/reports/tests/unitTest
+          if-no-files-found: warn
+
   backend-integration-tests:
     name: Backend Integration Tests
     runs-on: ubuntu-latest
@@ -107,6 +115,22 @@ jobs:
           path: build/reports/jacoco/test
           if-no-files-found: warn
 
+      - name: Upload Backend Integration HTML Report
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: backend-integration-html-report
+          path: build/reports/tests/integrationTest
+          if-no-files-found: warn
+
+      - name: Upload Backend JaCoCo HTML Report
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: backend-jacoco-html-report
+          path: build/reports/jacoco/test/html
+          if-no-files-found: warn
+
   frontend-tests:
     name: Frontend Tests
     runs-on: ubuntu-latest
@@ -142,6 +166,14 @@ jobs:
         with:
           name: frontend-test-results
           path: src/main/webapp/coverage
+          if-no-files-found: warn
+
+      - name: Upload Frontend HTML Coverage Report
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: frontend-lcov-html-report
+          path: src/main/webapp/coverage/lcov-report
           if-no-files-found: warn
 
   pr-test-report:
@@ -191,6 +223,8 @@ jobs:
 
       - name: Build PR Comment Body
         id: report
+        env:
+          RUN_URL: ${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }}
         run: |
           python3 - <<'PY'
           import glob
@@ -289,6 +323,13 @@ jobs:
           - Functions: {cov_func}
           - Statements: {cov_stmt}
           - Branches: {cov_branch}
+
+          ### HTML Reports
+          - [CI Run Artifacts]({os.getenv('RUN_URL')})
+          - Backend Unit HTML artifact: `backend-unit-html-report`
+          - Backend Integration HTML artifact: `backend-integration-html-report`
+          - Backend JaCoCo HTML artifact: `backend-jacoco-html-report`
+          - Frontend Coverage HTML artifact: `frontend-lcov-html-report`
           """
 
           with open("pr_test_report.md", "w", encoding="utf-8") as f:
