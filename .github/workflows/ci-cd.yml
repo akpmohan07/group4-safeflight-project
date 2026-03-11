@@ -199,7 +199,7 @@ jobs:
           import xml.etree.ElementTree as ET
 
           def junit_summary(pattern):
-              files = glob.glob(pattern)
+              files = glob.glob(pattern, recursive=True)
               tests = failures = errors = skipped = 0
               for file in files:
                   try:
