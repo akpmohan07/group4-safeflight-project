@@ -1,24 +1,46 @@
-import logo from './logo.svg';
 import './App.css';
+import React from 'react';
+import { Routes, Route, useNavigate } from 'react-router-dom';
+import Layout from './components/Layout';
+import AuthPage from './pages/AuthPage';
+import ProfilePage from './pages/ProfilePage';
+import SearchPage from './pages/SearchPage';
+import { AuthProvider, useAuth } from './context/AuthContext';
+
+function AppContent() {
+  const navigate = useNavigate();
+  const { user, setUser } = useAuth();
+
+  return (
+    <Layout>
+      <Routes>
+        <Route
+          path="/"
+          element={
+            user ? (
+              <SearchPage />
+            ) : (
+              <AuthPage
+                onLoginSuccess={(loggedInUser) => {
+                  setUser(loggedInUser);
+                  navigate('/');
+                }}
+              />
+            )
+          }
+        />
+        <Route path="/profile" element={<ProfilePage user={user} />} />
+        <Route path="/search" element={<SearchPage />} />
+      </Routes>
+    </Layout>
+  );
+}
 
 function App() {
   return (
-    <div className="App">
-      <header className="App-header">
-        <img src={logo} className="App-logo" alt="logo" />
-        <p>
-          Edit <code>src/App.js</code> and save to reload.
-        </p>
-        <a
-          className="App-link"
-          href="https://reactjs.org"
-          target="_blank"
-          rel="noopener noreferrer"
-        >
-          Learn React
-        </a>
-      </header>
-    </div>
+    <AuthProvider>
+      <AppContent />
+    </AuthProvider>
   );
 }
 
