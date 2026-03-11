@@ -1,5 +1,5 @@
 import React, { useEffect, useMemo, useState } from 'react';
-import { Link, useParams } from 'react-router-dom';
+import { Link, useNavigate, useParams } from 'react-router-dom';
 
 function SeatMapPage() {
   const { scheduleId } = useParams();
@@ -7,6 +7,7 @@ function SeatMapPage() {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState('');
   const [selectedSeats, setSelectedSeats] = useState([]);
+  const navigate = useNavigate();
 
   useEffect(() => {
     let cancelled = false;
@@ -78,6 +79,13 @@ function SeatMapPage() {
     setSelectedSeats((prev) =>
       prev.includes(seatId) ? prev.filter((s) => s !== seatId) : [...prev, seatId]
     );
+  };
+
+  const handleContinue = () => {
+    if (!selectedSeats.length) return;
+    navigate(`/passengers/${scheduleId}`, {
+      state: { selectedSeats }
+    });
   };
 
   return (
@@ -198,16 +206,27 @@ function SeatMapPage() {
           </div>
         </div>
 
-        {seatPricing && (
-          <div className="mt-3 small">
-            <strong>Pricing (example):</strong>{' '}
-            {Object.entries(seatPricing).map(([k, v]) => (
-              <span key={k} className="me-3">
-                {k}: {v}
-              </span>
-            ))}
-          </div>
-        )}
+        <div className="d-flex justify-content-between align-items-center mt-3">
+          {seatPricing && (
+            <div className="small text-muted">
+              <strong>Pricing (example):</strong>{' '}
+              {Object.entries(seatPricing).map(([k, v]) => (
+                <span key={k} className="me-3">
+                  {k}: {v}
+                </span>
+              ))}
+            </div>
+          )}
+          <button
+            type="button"
+            className="btn btn-primary"
+            disabled={!selectedSeats.length}
+            onClick={handleContinue}
+          >
+            Continue ({selectedSeats.length} seat
+            {selectedSeats.length === 1 ? '' : 's'})
+          </button>
+        </div>
       </div>
     </div>
   );

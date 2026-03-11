@@ -6,6 +6,10 @@ import AuthPage from './pages/AuthPage';
 import ProfilePage from './pages/ProfilePage';
 import SearchPage from './pages/SearchPage';
 import SeatMapPage from './pages/SeatMapPage';
+import PassengerDetailsPage from './pages/PassengerDetailsPage';
+import PaymentPage from './pages/PaymentPage';
+import ConfirmationPage from './pages/ConfirmationPage';
+import BookingDetailPage from './pages/BookingDetailPage';
 import { AuthProvider, useAuth } from './context/AuthContext';
 
 function AppContent() {
@@ -33,6 +37,10 @@ function AppContent() {
         <Route path="/profile" element={<ProfilePage user={user} />} />
         <Route path="/search" element={<SearchPage />} />
         <Route path="/flights/:scheduleId" element={<SeatMapPage />} />
+        <Route path="/passengers/:scheduleId" element={<PassengerDetailsPage />} />
+        <Route path="/payment" element={<PaymentPage />} />
+        <Route path="/confirmation" element={<ConfirmationPage />} />
+        <Route path="/bookings/:bookingId" element={<BookingDetailPage />} />
       </Routes>
     </Layout>
   );

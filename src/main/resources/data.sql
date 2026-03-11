@@ -68,3 +68,7 @@ INSERT INTO booking_passengers (id, booking_id, passenger_id, seat_no, seat_type
   (1, 1, 1, '1A', 'First Class', 1),
   (2, 1, 1, '1B', 'First Class', 0)
 ON CONFLICT (id) DO NOTHING;
+
+-- Align sequences with seeded IDs so new inserts don't collide
+SELECT setval('booking_id_seq', (SELECT COALESCE(MAX(id), 1) FROM booking), true);
+SELECT setval('booking_passengers_id_seq', (SELECT COALESCE(MAX(id), 1) FROM booking_passengers), true);
