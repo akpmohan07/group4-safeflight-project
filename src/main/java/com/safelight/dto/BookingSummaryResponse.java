@@ -16,6 +16,7 @@ public class BookingSummaryResponse {
     private LocalTime travelTime;
     private List<String> seats;
     private List<PassengerBookingDto> passengers;
+    private String paymentStatus;
 
     public Integer getBookingId() {
         return bookingId;
@@ -95,6 +96,14 @@ public class BookingSummaryResponse {
 
     public void setPassengers(List<PassengerBookingDto> passengers) {
         this.passengers = passengers;
+    }
+
+    public String getPaymentStatus() {
+        return paymentStatus;
+    }
+
+    public void setPaymentStatus(String paymentStatus) {
+        this.paymentStatus = paymentStatus;
     }
 }
 

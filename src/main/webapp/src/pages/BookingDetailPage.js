@@ -91,19 +91,26 @@ function BookingDetailPage() {
   return (
     <div className="row justify-content-center">
       <div className="col-md-8 col-lg-7">
-        <Link to="/profile" className="btn btn-outline-secondary btn-sm mb-3">
+        <Link to="/profile" className="btn btn-outline-secondary btn-sm mb-3 no-print">
           ← Back to my bookings
         </Link>
 
-        <div className="mb-4">
+        <div className="mb-4 no-print">
           <h4 className="mb-1">Booking details</h4>
           <p className="text-muted mb-0 small">Booking #{booking.bookingId}</p>
         </div>
 
-        <div className="card shadow-sm mb-4">
-          <div className="card-header bg-primary text-white d-flex justify-content-between align-items-center">
+        <div className="card shadow-sm mb-4" id="ticket-content">
+          <div className="card-header bg-primary text-white d-flex justify-content-between align-items-center flex-wrap gap-2">
             <span className="fw-bold">Booking #{booking.bookingId}</span>
-            <span className="badge bg-light text-dark">{booking.status}</span>
+            <span className="d-flex gap-2 align-items-center">
+              <span className="badge bg-light text-dark">{booking.status}</span>
+              {booking.paymentStatus && (
+                <span className="badge bg-success">
+                  Payment: {booking.paymentStatus === 'SUCCESS' ? 'Paid' : booking.paymentStatus}
+                </span>
+              )}
+            </span>
           </div>
           <div className="card-body">
             <div className="mb-3">
@@ -169,7 +176,32 @@ function BookingDetailPage() {
           </div>
         </div>
 
-        <div className="d-flex flex-wrap gap-2">
+        <div className="d-flex flex-wrap gap-2 no-print">
+          <button
+            type="button"
+            className="btn btn-outline-secondary"
+            onClick={() => {
+              const url = `/api/bookings/${bookingId}/ticket/pdf`;
+              fetch(url, { credentials: 'include' })
+                .then((res) => {
+                  if (!res.ok) return;
+                  const disposition = res.headers.get('Content-Disposition');
+                  const match = disposition && disposition.match(/filename="?([^";]+)"?/);
+                  const filename = match ? match[1] : `ticket-booking-${bookingId}.pdf`;
+                  return res.blob().then((blob) => ({ blob, filename }));
+                })
+                .then((result) => {
+                  if (!result) return;
+                  const a = document.createElement('a');
+                  a.href = URL.createObjectURL(result.blob);
+                  a.download = result.filename;
+                  a.click();
+                  URL.revokeObjectURL(a.href);
+                });
+            }}
+          >
+            Download ticket
+          </button>
           <Link to="/" className="btn btn-outline-primary">Back to search</Link>
           <Link to="/profile" className="btn btn-primary">View my bookings</Link>
         </div>

@@ -5,11 +5,15 @@ import com.safelight.dto.CreateBookingRequest;
 import com.safelight.dto.PassengerBookingDto;
 import com.safelight.model.*;
 import com.safelight.repository.*;
+import com.safelight.service.TicketPdfService;
 import jakarta.servlet.http.HttpSession;
+import org.springframework.http.HttpHeaders;
 import org.springframework.http.HttpStatus;
+import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
+import java.io.IOException;
 import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.util.*;
@@ -24,17 +28,20 @@ public class BookingController {
     private final BookingRepository bookingRepository;
     private final PassengerRepository passengerRepository;
     private final BookingPassengerRepository bookingPassengerRepository;
+    private final TicketPdfService ticketPdfService;
 
     public BookingController(UserRepository userRepository,
                              FlightScheduleRepository flightScheduleRepository,
                              BookingRepository bookingRepository,
                              PassengerRepository passengerRepository,
-                             BookingPassengerRepository bookingPassengerRepository) {
+                             BookingPassengerRepository bookingPassengerRepository,
+                             TicketPdfService ticketPdfService) {
         this.userRepository = userRepository;
         this.flightScheduleRepository = flightScheduleRepository;
         this.bookingRepository = bookingRepository;
         this.passengerRepository = passengerRepository;
         this.bookingPassengerRepository = bookingPassengerRepository;
+        this.ticketPdfService = ticketPdfService;
     }
 
     @GetMapping("/me")
@@ -50,6 +57,7 @@ public class BookingController {
             BookingSummaryResponse dto = new BookingSummaryResponse();
             dto.setBookingId(b.getId());
             dto.setStatus(b.getStatus());
+            dto.setPaymentStatus(b.getPaymentStatus());
             FlightSchedule s = b.getFlightSchedule();
             dto.setFlightCode(s.getFlight().getFlightCode());
             dto.setAirlineName(s.getFlight().getAirline().getName());
@@ -117,11 +125,11 @@ public class BookingController {
             }
         }
 
-        // Create booking - mark as CONFIRMED since payment is mocked
         Booking booking = new Booking();
         booking.setUser(userOpt.get());
         booking.setFlightSchedule(schedule);
-        booking.setStatus("CONFIRMED");
+        booking.setStatus("PENDING");
+        booking.setPaymentStatus("PENDING");
         booking.setBookedTime(LocalDateTime.now());
         booking = bookingRepository.save(booking);
 
@@ -184,6 +192,7 @@ public class BookingController {
         summary.setTravelTime(schedule.getTravelTime());
         summary.setSeats(bookedSeatList);
         summary.setPassengers(passengerDtos);
+        summary.setPaymentStatus(booking.getPaymentStatus());
 
         return ResponseEntity.status(HttpStatus.CREATED).body(summary);
     }
@@ -232,6 +241,7 @@ public class BookingController {
         BookingSummaryResponse dto = new BookingSummaryResponse();
         dto.setBookingId(booking.getId());
         dto.setStatus(booking.getStatus());
+        dto.setPaymentStatus(booking.getPaymentStatus());
         dto.setFlightCode(s.getFlight().getFlightCode());
         dto.setAirlineName(s.getFlight().getAirline().getName());
         dto.setFromAirport(s.getRoute().getFromDestination().getAirport());
@@ -242,6 +252,60 @@ public class BookingController {
         dto.setPassengers(passengerDtos);
 
         return ResponseEntity.ok(dto);
+    }
+
+    @PostMapping("/{id}/pay")
+    public ResponseEntity<?> recordPayment(@PathVariable Integer id, HttpSession session) {
+        Object idAttr = session.getAttribute("USER_ID");
+        if (!(idAttr instanceof Integer)) {
+            return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body("Not logged in");
+        }
+        Integer userId = (Integer) idAttr;
+
+        Optional<Booking> bookingOpt = bookingRepository.findById(id);
+        if (bookingOpt.isEmpty()) {
+            return ResponseEntity.notFound().build();
+        }
+        Booking booking = bookingOpt.get();
+        if (!booking.getUser().getId().equals(userId)) {
+            return ResponseEntity.status(HttpStatus.FORBIDDEN).build();
+        }
+
+        booking.setPaymentStatus("SUCCESS");
+        booking.setStatus("CONFIRMED");
+        bookingRepository.save(booking);
+
+        return ResponseEntity.ok().build();
+    }
+
+    @GetMapping(value = "/{id}/ticket/pdf", produces = MediaType.APPLICATION_PDF_VALUE)
+    public ResponseEntity<?> downloadTicketPdf(@PathVariable Integer id, HttpSession session) {
+        Object idAttr = session.getAttribute("USER_ID");
+        if (!(idAttr instanceof Integer)) {
+            return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body("Not logged in");
+        }
+        Integer userId = (Integer) idAttr;
+
+        Optional<Booking> bookingOpt = bookingRepository.findById(id);
+        if (bookingOpt.isEmpty()) {
+            return ResponseEntity.notFound().build();
+        }
+        Booking booking = bookingOpt.get();
+        if (!booking.getUser().getId().equals(userId)) {
+            return ResponseEntity.status(HttpStatus.FORBIDDEN).build();
+        }
+
+        try {
+            byte[] pdf = ticketPdfService.generateTicketPdf(booking);
+            HttpHeaders headers = new HttpHeaders();
+            headers.add(HttpHeaders.CONTENT_DISPOSITION, "attachment; filename=\"ticket-booking-" + id + ".pdf\"");
+            return ResponseEntity.ok()
+                    .headers(headers)
+                    .contentLength(pdf.length)
+                    .body(pdf);
+        } catch (IOException e) {
+            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).build();
+        }
     }
 }
 

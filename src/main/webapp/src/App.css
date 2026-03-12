@@ -1,1 +1,13 @@
 /* Keep minimal overrides only if needed */
+
+@media print {
+  .no-print {
+    display: none !important;
+  }
+  body {
+    background: white;
+  }
+  .container {
+    max-width: 100%;
+  }
+}

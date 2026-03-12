@@ -6,6 +6,11 @@ function PassengerDetailsPage() {
   const location = useLocation();
   const navigate = useNavigate();
   const selectedSeats = (location.state && location.state.selectedSeats) || [];
+  const seatPricingSummary = location.state?.seatPricingSummary || null;
+  const totalAmount = seatPricingSummary?.totalAmount;
+  const formatCurrency = (n) => (n != null && !Number.isNaN(n))
+    ? `$${Number(n).toLocaleString('en-US', { minimumFractionDigits: 0, maximumFractionDigits: 0 })}`
+    : '';
 
   const [data, setData] = useState(null);
   const [loading, setLoading] = useState(true);
@@ -113,7 +118,12 @@ function PassengerDetailsPage() {
       }
 
       const bookingSummary = await res.json();
-      navigate('/payment', { state: { booking: bookingSummary } });
+      navigate('/payment', {
+        state: {
+          booking: bookingSummary,
+          totalAmount: totalAmount != null ? totalAmount : undefined
+        }
+      });
     } catch (e) {
       setBookingError(e.message || 'Booking failed');
     } finally {
@@ -246,6 +256,13 @@ function PassengerDetailsPage() {
                 </div>
               );
             })}
+
+            {totalAmount != null && totalAmount > 0 && (
+              <div className="d-flex justify-content-between align-items-center mt-3 py-2 px-2 bg-light rounded">
+                <span className="fw-semibold">Total amount</span>
+                <span className="fw-bold text-primary">{formatCurrency(totalAmount)}</span>
+              </div>
+            )}
 
             {bookingError && (
               <div className="alert alert-danger mt-2 mb-0">{bookingError}</div>

@@ -60,8 +60,8 @@ INSERT INTO passengers (id, fname, lname, dob, phone, email, passport) VALUES
   (1, 'Test', 'Passenger', '1995-05-15', '9999999999', 'test.passenger@safeflight.com', 'P1234567')
 ON CONFLICT (id) DO NOTHING;
 
-INSERT INTO booking (id, user_id, flight_schedule_id, status, booked_time) VALUES
-  (1, 1, 1, 'CONFIRMED', '2026-05-01 10:00:00')
+INSERT INTO booking (id, user_id, flight_schedule_id, status, payment_status, booked_time) VALUES
+  (1, 1, 1, 'CONFIRMED', 'SUCCESS', '2026-05-01 10:00:00')
 ON CONFLICT (id) DO NOTHING;
 
 INSERT INTO booking_passengers (id, booking_id, passenger_id, seat_no, seat_type, baggage_quantity) VALUES

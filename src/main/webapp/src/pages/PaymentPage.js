@@ -5,6 +5,10 @@ function PaymentPage() {
   const { state } = useLocation();
   const navigate = useNavigate();
   const booking = state && state.booking;
+  const totalAmount = state?.totalAmount;
+  const formatCurrency = (n) => (n != null && !Number.isNaN(n))
+    ? `$${Number(n).toLocaleString('en-US', { minimumFractionDigits: 0, maximumFractionDigits: 0 })}`
+    : '';
 
   const [card, setCard] = useState({
     type: 'VISA',
@@ -27,10 +31,22 @@ function PaymentPage() {
     setCard((prev) => ({ ...prev, [name]: value }));
   };
 
-  const handlePay = () => {
-    // Mock payment: no backend call; redirect to confirmation
-    setStatus('success');
-    navigate('/confirmation', { state: { booking }, replace: true });
+  const handlePay = async () => {
+    setStatus('pending');
+    try {
+      const res = await fetch(`/api/bookings/${booking.bookingId}/pay`, { method: 'POST' });
+      if (!res.ok) {
+        setStatus(null);
+        return;
+      }
+      setStatus('success');
+      navigate('/confirmation', {
+        state: { booking: { ...booking, paymentStatus: 'SUCCESS', status: 'CONFIRMED' }, totalAmount },
+        replace: true
+      });
+    } catch {
+      setStatus(null);
+    }
   };
 
   return (
@@ -55,9 +71,14 @@ function PaymentPage() {
             <div className="small text-muted mb-1">
               {booking.flightCode} &middot; {booking.fromAirport} → {booking.toAirport}
             </div>
-            <div className="small text-muted">
+            <div className="small text-muted mb-1">
               Seats: {booking.seats && booking.seats.join(', ')}
             </div>
+            {totalAmount != null && totalAmount > 0 && (
+              <div className="small mt-2 pt-2 border-top">
+                <strong>Amount due:</strong> <span className="text-primary fw-semibold">{formatCurrency(totalAmount)}</span>
+              </div>
+            )}
           </div>
         </div>
 
@@ -109,8 +130,13 @@ function PaymentPage() {
                 />
               </div>
             </div>
-            <button className="btn btn-success" type="button" onClick={handlePay}>
-              Pay now (mock)
+            <button
+              className="btn btn-success"
+              type="button"
+              onClick={handlePay}
+              disabled={status === 'pending'}
+            >
+              {status === 'pending' ? 'Processing...' : 'Pay now (mock)'}
             </button>
 
             {status === 'success' && (

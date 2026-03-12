@@ -92,6 +92,7 @@ function ProfilePage({ user }) {
                           <th>Date</th>
                           <th>Time</th>
                           <th>Status</th>
+                          <th>Payment</th>
                           <th>Seats</th>
                           <th></th>
                         </tr>
@@ -107,6 +108,13 @@ function ProfilePage({ user }) {
                             <td>{b.travelDate}</td>
                             <td>{b.travelTime}</td>
                             <td>{b.status}</td>
+                            <td>
+                              {b.paymentStatus ? (
+                                <span className={`badge ${b.paymentStatus === 'SUCCESS' ? 'bg-success' : 'bg-secondary'}`}>
+                                  {b.paymentStatus === 'SUCCESS' ? 'Paid' : b.paymentStatus}
+                                </span>
+                              ) : '—'}
+                            </td>
                             <td>{b.seats && b.seats.join(', ')}</td>
                             <td>
                               <Link

@@ -13,7 +13,7 @@ function Layout({ children }) {
 
   return (
     <div className="bg-light min-vh-100">
-      <nav className="navbar navbar-expand-lg navbar-light bg-white border-bottom">
+      <nav className="navbar navbar-expand-lg navbar-light bg-white border-bottom no-print">
         <div className="container">
           <Link className="navbar-brand fw-semibold" to="/">
             Safeflight
