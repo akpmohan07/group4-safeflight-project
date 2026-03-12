@@ -21,6 +21,7 @@ import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
+import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.put;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.content;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.jsonPath;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.request;
@@ -192,5 +193,59 @@ class AuthControllerIntegrationTest {
 
         mockMvc.perform(post("/api/auth/logout").session(session))
                 .andExpect(status().isNoContent());
+    }
+
+    @Test
+    void updateProfileShouldUpdateFieldsForLoggedInUser() throws Exception {
+        User existing = new User();
+        existing.setId(42);
+        existing.setFname("Old");
+        existing.setLname("Name");
+        existing.setEmail("user@example.com");
+        existing.setPhone("1111111111");
+        existing.setCountry("India");
+        existing.setDob(LocalDate.of(1990, 1, 1));
+        existing.setRole("USER");
+
+        when(userRepository.findById(42)).thenReturn(Optional.of(existing));
+        when(userRepository.save(any(User.class))).thenAnswer(invocation -> invocation.getArgument(0));
+
+        MockHttpSession session = new MockHttpSession();
+        session.setAttribute("USER_ID", 42);
+
+        mockMvc.perform(put("/api/auth/me")
+                        .session(session)
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content("""
+                                {
+                                  "fname": "New",
+                                  "lname": "User",
+                                  "phone": "9999999999",
+                                  "dob": "1995-05-15",
+                                  "country": "Singapore"
+                                }
+                                """))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.id", is(42)))
+                .andExpect(jsonPath("$.fname", is("New")))
+                .andExpect(jsonPath("$.lname", is("User")))
+                .andExpect(jsonPath("$.phone", is("9999999999")))
+                .andExpect(jsonPath("$.country", is("Singapore")))
+                .andExpect(jsonPath("$.dob", is("1995-05-15")));
+
+        verify(userRepository).save(any(User.class));
+    }
+
+    @Test
+    void updateProfileShouldReturnUnauthorizedWhenNotLoggedIn() throws Exception {
+        mockMvc.perform(put("/api/auth/me")
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content("""
+                                {
+                                  "fname": "NewName"
+                                }
+                                """))
+                .andExpect(status().isUnauthorized())
+                .andExpect(content().string("Not logged in"));
     }
 }
