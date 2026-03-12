@@ -1,5 +1,3 @@
-version: "3.9"
-
 services:
   db:
     image: postgres:16
@@ -20,9 +18,6 @@ services:
 
   app:
     image: ${DOCKER_REGISTRY:-docker.io}/${IMAGE_NAME:-harrishka/safeflight}:latest
-    # build:
-    #   context: .
-    #   dockerfile: Dockerfile
     container_name: safeflight-app
     depends_on:
       db:
