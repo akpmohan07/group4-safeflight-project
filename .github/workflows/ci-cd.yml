@@ -227,6 +227,7 @@ jobs:
           SPRING_DATASOURCE_URL: jdbc:postgresql://localhost:5432/safeflight
           SPRING_DATASOURCE_USERNAME: safeflight
           SPRING_DATASOURCE_PASSWORD: safeflight
+          CI: "false"
         run: |
           ./gradlew --no-daemon bootRun > bootrun.log 2>&1 &
           echo $! > bootrun.pid
