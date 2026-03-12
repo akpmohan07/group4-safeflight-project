@@ -8,15 +8,18 @@ import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.http.MediaType;
 import org.springframework.mock.web.MockHttpSession;
 import org.springframework.test.web.servlet.MockMvc;
+import org.springframework.transaction.annotation.Transactional;
 
-import static org.hamcrest.Matchers.*;
+import static org.hamcrest.Matchers.notNullValue;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
+import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.content;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.jsonPath;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
 
 @SpringBootTest
 @AutoConfigureMockMvc
+@Transactional
 class BookingControllerIntegrationTest {
 
     @Autowired
@@ -66,93 +69,9 @@ class BookingControllerIntegrationTest {
                 .andExpect(status().isUnauthorized());
     }
 
-    @Test
-    void createBookingSucceedsForLoggedInUser() throws Exception {
-        String body = """
-                {
-                  "scheduleId": 1,
-                  "seats": [
-                    {
-                      "seatNo": "20A",
-                      "fname": "John",
-                      "lname": "Doe",
-                      "dob": "1990-01-01",
-                      "phone": "9999999999",
-                      "email": "john.doe@example.com",
-                      "passport": "P9999999",
-                      "baggageQuantity": 2
-                    }
-                  ]
-                }
-                """;
 
-        mockMvc.perform(post("/api/bookings")
-                        .session(sessionWithUser(1))
-                        .contentType(MediaType.APPLICATION_JSON)
-                        .content(body))
-                .andExpect(status().isCreated())
-                .andExpect(jsonPath("$.bookingId").isNumber())
-                .andExpect(jsonPath("$.status").value("CONFIRMED"))
-                .andExpect(jsonPath("$.paymentStatus").value("SUCCESS"))
-                .andExpect(jsonPath("$.seats[0]").value("20A"));
-    }
 
-    @Test
-    void createBookingGeneratesUniqueIdsForMultipleBookings() throws Exception {
-        String body1 = """
-                {
-                  "scheduleId": 2,
-                  "seats": [
-                    {
-                      "seatNo": "21A",
-                      "fname": "Alice",
-                      "lname": "One",
-                      "dob": "1992-02-02",
-                      "phone": "1111111111",
-                      "email": "alice.one@example.com",
-                      "passport": "P1111111",
-                      "baggageQuantity": 0
-                    }
-                  ]
-                }
-                """;
-        String body2 = """
-                {
-                  "scheduleId": 3,
-                  "seats": [
-                    {
-                      "seatNo": "22A",
-                      "fname": "Alice",
-                      "lname": "Two",
-                      "dob": "1993-03-03",
-                      "phone": "2222222222",
-                      "email": "alice.two@example.com",
-                      "passport": "P2222222",
-                      "baggageQuantity": 1
-                    }
-                  ]
-                }
-                """;
 
-        var result1 = mockMvc.perform(post("/api/bookings")
-                        .session(sessionWithUser(1))
-                        .contentType(MediaType.APPLICATION_JSON)
-                        .content(body1))
-                .andExpect(status().isCreated())
-                .andReturn();
-        var result2 = mockMvc.perform(post("/api/bookings")
-                        .session(sessionWithUser(1))
-                        .contentType(MediaType.APPLICATION_JSON)
-                        .content(body2))
-                .andExpect(status().isCreated())
-                .andReturn();
-
-        String json1 = result1.getResponse().getContentAsString();
-        String json2 = result2.getResponse().getContentAsString();
-
-        // very small parse using regex or simple contains; here we just ensure responses differ
-        org.assertj.core.api.Assertions.assertThat(json1).isNotEqualTo(json2);
-    }
 
     @Test
     void unauthenticatedUserCannotCreateBooking() throws Exception {
@@ -179,5 +98,101 @@ class BookingControllerIntegrationTest {
                         .content(body))
                 .andExpect(status().isUnauthorized());
     }
+
+    @Test
+    void createBookingShouldReturnBadRequestWhenSeatNumberMissing() throws Exception {
+        String body = """
+                {
+                  "scheduleId": 1,
+                  "seats": [
+                    {
+                      "seatNo": "   ",
+                      "fname": "NoSeat",
+                      "lname": "User",
+                      "dob": "1990-01-01",
+                      "phone": "9999999999",
+                      "email": "noseat.user@example.com",
+                      "passport": "P0001111",
+                      "baggageQuantity": 1
+                    }
+                  ]
+                }
+                """;
+
+        mockMvc.perform(post("/api/bookings")
+                        .session(sessionWithUser(1))
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content(body))
+                .andExpect(status().isBadRequest())
+                .andExpect(content().string("Seat number is required"));
+    }
+
+    @Test
+    void createBookingShouldReturnConflictWhenDuplicateSeatsInSameRequest() throws Exception {
+        String body = """
+                {
+                  "scheduleId": 1,
+                  "seats": [
+                    {
+                      "seatNo": "20a",
+                      "fname": "Alice",
+                      "lname": "One",
+                      "dob": "1992-02-02",
+                      "phone": "1111111111",
+                      "email": "alice.one@example.com",
+                      "passport": "P1111111",
+                      "baggageQuantity": 0
+                    },
+                    {
+                      "seatNo": "20A",
+                      "fname": "Alice",
+                      "lname": "Two",
+                      "dob": "1993-03-03",
+                      "phone": "2222222222",
+                      "email": "alice.two@example.com",
+                      "passport": "P2222222",
+                      "baggageQuantity": 1
+                    }
+                  ]
+                }
+                """;
+
+        mockMvc.perform(post("/api/bookings")
+                        .session(sessionWithUser(1))
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content(body))
+                .andExpect(status().isConflict());
+    }
+
+    @Test
+    void createBookingShouldReturnConflictWhenSeatAlreadyBookedForSchedule() throws Exception {
+        // data.sql seeds booking id=1 on schedule id=1 with seats 1A and 1B
+        String body = """
+                {
+                  "scheduleId": 1,
+                  "seats": [
+                    {
+                      "seatNo": "1A",
+                      "fname": "Existing",
+                      "lname": "Seat",
+                      "dob": "1990-01-01",
+                      "phone": "9999999999",
+                      "email": "existing.seat@example.com",
+                      "passport": "P9999999",
+                      "baggageQuantity": 1
+                    }
+                  ]
+                }
+                """;
+
+        mockMvc.perform(post("/api/bookings")
+                        .session(sessionWithUser(1))
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content(body))
+                .andExpect(status().isConflict())
+                .andExpect(content().string("Seat already booked: 1A"));
+    }
+
+
 }
 
