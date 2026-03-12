@@ -1,5 +1,5 @@
 import React, { useEffect, useMemo, useState } from 'react';
-import { Link, useParams } from 'react-router-dom';
+import { Link, useNavigate, useParams } from 'react-router-dom';
 
 function SeatMapPage() {
   const { scheduleId } = useParams();
@@ -7,6 +7,7 @@ function SeatMapPage() {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState('');
   const [selectedSeats, setSelectedSeats] = useState([]);
+  const navigate = useNavigate();
 
   useEffect(() => {
     let cancelled = false;
@@ -74,10 +75,38 @@ function SeatMapPage() {
     }
   });
 
+  const getSeatRow = (seatId) => parseInt(String(seatId).replace(/[^0-9]/g, ''), 10) || 0;
+  const getSeatType = (seatId) => rowSections[getSeatRow(seatId)]?.type || null;
+  const getSeatPrice = (seatId) => {
+    const type = getSeatType(seatId);
+    return (seatPricing && type && seatPricing[type]) != null ? Number(seatPricing[type]) : null;
+  };
+
+  const selectedDetails = selectedSeats.map((seatId) => ({
+    seatId,
+    type: getSeatType(seatId),
+    price: getSeatPrice(seatId)
+  }));
+  const totalAmount = selectedDetails.reduce((sum, s) => sum + (s.price ?? 0), 0);
+  const formatCurrency = (n) => (n != null && !Number.isNaN(n))
+    ? `$${Number(n).toLocaleString('en-US', { minimumFractionDigits: 0, maximumFractionDigits: 0 })}`
+    : '—';
+
   const toggleSeat = (seatId) => {
     setSelectedSeats((prev) =>
       prev.includes(seatId) ? prev.filter((s) => s !== seatId) : [...prev, seatId]
     );
+  };
+
+  const handleContinue = () => {
+    if (!selectedSeats.length) return;
+    const seatPricingSummary = {
+      seatDetails: selectedDetails,
+      totalAmount: totalAmount > 0 ? totalAmount : null
+    };
+    navigate(`/passengers/${scheduleId}`, {
+      state: { selectedSeats, seatPricingSummary }
+    });
   };
 
   return (
@@ -198,16 +227,51 @@ function SeatMapPage() {
           </div>
         </div>
 
-        {seatPricing && (
-          <div className="mt-3 small">
-            <strong>Pricing (example):</strong>{' '}
-            {Object.entries(seatPricing).map(([k, v]) => (
-              <span key={k} className="me-3">
-                {k}: {v}
-              </span>
-            ))}
+        {selectedSeats.length > 0 && (
+          <div className="card border-primary shadow-sm mt-3">
+            <div className="card-header bg-light py-2">
+              <strong>Selected seats & price</strong>
+            </div>
+            <div className="card-body py-2">
+              <ul className="list-unstyled mb-2 small">
+                {selectedDetails.map(({ seatId, type, price }) => (
+                  <li key={seatId} className="d-flex justify-content-between">
+                    <span>Seat <strong>{seatId}</strong>{type && <span className="text-muted ms-1">({type})</span>}</span>
+                    <span>{formatCurrency(price)}</span>
+                  </li>
+                ))}
+              </ul>
+              <div className="d-flex justify-content-between align-items-center pt-2 border-top">
+                <strong>Total</strong>
+                <strong className="text-primary">{formatCurrency(totalAmount)}</strong>
+              </div>
+            </div>
           </div>
         )}
+
+        <div className="d-flex justify-content-between align-items-center mt-3">
+          {seatPricing && !selectedSeats.length && (
+            <div className="small text-muted">
+              <strong>Fare by cabin:</strong>{' '}
+              {Object.entries(seatPricing).map(([k, v]) => (
+                <span key={k} className="me-3">
+                  {k}: {formatCurrency(v)}
+                </span>
+              ))}
+            </div>
+          )}
+          {selectedSeats.length > 0 && <span />}
+          <button
+            type="button"
+            className="btn btn-primary"
+            disabled={!selectedSeats.length}
+            onClick={handleContinue}
+          >
+            Continue ({selectedSeats.length} seat
+            {selectedSeats.length === 1 ? '' : 's'}
+            {totalAmount > 0 ? ` · ${formatCurrency(totalAmount)}` : ''})
+          </button>
+        </div>
       </div>
     </div>
   );

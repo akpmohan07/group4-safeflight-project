@@ -1,23 +1,12 @@
 package com.safelight.dto;
 
-public class UserResponse {
+public class UpdateProfileRequest {
 
-    private Integer id;
     private String fname;
     private String lname;
-    private String email;
     private String phone;
     private String dob;
     private String country;
-    private String role;
-
-    public Integer getId() {
-        return id;
-    }
-
-    public void setId(Integer id) {
-        this.id = id;
-    }
 
     public String getFname() {
         return fname;
@@ -33,14 +22,6 @@ public class UserResponse {
 
     public void setLname(String lname) {
         this.lname = lname;
-    }
-
-    public String getEmail() {
-        return email;
-    }
-
-    public void setEmail(String email) {
-        this.email = email;
     }
 
     public String getPhone() {
@@ -66,13 +47,4 @@ public class UserResponse {
     public void setCountry(String country) {
         this.country = country;
     }
-
-    public String getRole() {
-        return role;
-    }
-
-    public void setRole(String role) {
-        this.role = role;
-    }
 }
-

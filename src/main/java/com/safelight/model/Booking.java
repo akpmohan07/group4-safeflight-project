@@ -22,7 +22,10 @@ public class Booking {
     private FlightSchedule flightSchedule;
     
     private String status;
-    
+
+    @Column(name = "payment_status")
+    private String paymentStatus;
+
     @Column(name = "booked_time")
     private LocalDateTime bookedTime;
     
@@ -64,7 +67,15 @@ public class Booking {
     public void setStatus(String status) {
         this.status = status;
     }
-    
+
+    public String getPaymentStatus() {
+        return paymentStatus;
+    }
+
+    public void setPaymentStatus(String paymentStatus) {
+        this.paymentStatus = paymentStatus;
+    }
+
     public LocalDateTime getBookedTime() {
         return bookedTime;
     }

@@ -132,6 +132,7 @@ function SearchPage() {
                           <th>Time</th>
                           <th>From</th>
                           <th>To</th>
+                          <th>Price</th>
                         </tr>
                       </thead>
                       <tbody>
@@ -146,6 +147,11 @@ function SearchPage() {
                             <td>{r.travelTime}</td>
                             <td>{r.fromAirport}</td>
                             <td>{r.toAirport}</td>
+                            <td>
+                              {r.priceFrom != null
+                                ? `From $${Number(r.priceFrom).toLocaleString('en-US', { minimumFractionDigits: 0, maximumFractionDigits: 0 })}`
+                                : '—'}
+                            </td>
                           </tr>
                         ))}
                       </tbody>
