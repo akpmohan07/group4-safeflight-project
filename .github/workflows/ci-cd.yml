@@ -228,21 +228,42 @@ jobs:
           SPRING_DATASOURCE_USERNAME: safeflight
           SPRING_DATASOURCE_PASSWORD: safeflight
         run: |
-          ./gradlew bootRun > bootrun.log 2>&1 &
-          echo "BootRun started"
+          ./gradlew --no-daemon bootRun > bootrun.log 2>&1 &
+          echo $! > bootrun.pid
+          echo "BootRun started with PID $(cat bootrun.pid)"
 
       - name: Wait for backend readiness
         run: |
-          for i in {1..60}; do
-            if curl -sSf http://localhost:8080/ > /dev/null; then
+          BACKEND_PID="$(cat bootrun.pid)"
+          for i in {1..120}; do
+            if ! kill -0 "$BACKEND_PID" 2>/dev/null; then
+              echo "Backend process exited before readiness"
+              echo "===== bootrun.log (last 200 lines) ====="
+              tail -n 200 bootrun.log || true
+              exit 1
+            fi
+
+            status="$(curl -s -o /dev/null -w "%{http_code}" http://localhost:8080/ || true)"
+            if [ "$status" != "000" ]; then
               echo "Backend is ready"
               exit 0
             fi
-            echo "Waiting for backend... attempt $i/60"
+            echo "Waiting for backend... attempt $i/120"
             sleep 5
           done
+
           echo "Backend did not become ready in time"
+          echo "===== bootrun.log (last 200 lines) ====="
+          tail -n 200 bootrun.log || true
           exit 1
+
+      - name: Upload backend boot log
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: backend-bootrun-log
+          path: bootrun.log
+          if-no-files-found: warn
 
       - name: Run Playwright E2E (headless in CI)
         working-directory: src/main/webapp
