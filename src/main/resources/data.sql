@@ -2,7 +2,8 @@
 INSERT INTO airlines (id, name, country) VALUES
   (1, 'Safe Air', 'India'),
   (2, 'Sky Connect', 'Singapore'),
-  (3, 'Global Wings', 'United Arab Emirates')
+  (3, 'Global Wings', 'United Arab Emirates'),
+  (4, 'Euro Wings', 'Germany')
 ON CONFLICT (id) DO NOTHING;
 
 INSERT INTO flight_model (id, model_number, model_name, manufacturer, seat_mapping) VALUES
@@ -14,7 +15,9 @@ INSERT INTO flights (id, airline_id, flight_name, flight_code, flight_model_id) 
   (1, 1, 'Safe Air Chennai - Delhi', 'SF101', 1),
   (2, 1, 'Safe Air Delhi - Mumbai', 'SF102', 2),
   (3, 2, 'Sky Connect Singapore - Chennai', 'SC201', 1),
-  (4, 3, 'Global Wings Dubai - Bangalore', 'GW301', 2)
+  (4, 3, 'Global Wings Dubai - Bangalore', 'GW301', 2),
+  (5, 4, 'Euro Wings Berlin - Paris', 'EW401', 1),
+  (6, 4, 'Euro Wings Paris - Rome', 'EW402', 2)
 ON CONFLICT (id) DO NOTHING;
 
 INSERT INTO destination (id, country, city, airport) VALUES
@@ -23,14 +26,19 @@ INSERT INTO destination (id, country, city, airport) VALUES
   (3, 'India', 'Mumbai', 'BOM'),
   (4, 'Singapore', 'Singapore', 'SIN'),
   (5, 'United Arab Emirates', 'Dubai', 'DXB'),
-  (6, 'India', 'Bangalore', 'BLR')
+  (6, 'India', 'Bangalore', 'BLR'),
+  (7, 'Germany', 'Berlin', 'BER'),
+  (8, 'France', 'Paris', 'CDG'),
+  (9, 'Italy', 'Rome', 'FCO')
 ON CONFLICT (id) DO NOTHING;
 
 INSERT INTO routes (id, from_destination_id, to_destination_id) VALUES
   (1, 1, 2),   -- Chennai -> Delhi
   (2, 2, 3),   -- Delhi -> Mumbai
   (3, 4, 1),   -- Singapore -> Chennai
-  (4, 5, 6)    -- Dubai -> Bangalore
+  (4, 5, 6),   -- Dubai -> Bangalore
+  (5, 7, 8),   -- Berlin -> Paris
+  (6, 8, 9)    -- Paris -> Rome
 ON CONFLICT (id) DO NOTHING;
 
 INSERT INTO flight_schedule (id, flight_id, route_id, travel_date, travel_time) VALUES
@@ -42,7 +50,11 @@ INSERT INTO flight_schedule (id, flight_id, route_id, travel_date, travel_time) 
   (6, 3, 3, '2026-06-03', '09:15:00'),
   (7, 3, 3, '2026-06-04', '21:00:00'),
   (8, 4, 4, '2026-06-01', '02:30:00'),
-  (9, 4, 4, '2026-06-02', '15:20:00')
+  (9, 4, 4, '2026-06-02', '15:20:00'),
+  (10, 5, 5, '2026-06-05', '07:45:00'),
+  (11, 5, 5, '2026-06-05', '16:30:00'),
+  (12, 6, 6, '2026-06-06', '09:10:00'),
+  (13, 6, 6, '2026-06-07', '19:25:00')
 ON CONFLICT (id) DO NOTHING;
 
 INSERT INTO users (id, fname, lname, email, password, phone, dob, country, role) VALUES
@@ -53,7 +65,10 @@ ON CONFLICT (id) DO NOTHING;
 SELECT setval('users_id_seq', (SELECT COALESCE(MAX(id), 1) FROM users), true);
 
 INSERT INTO airline_user (id, airline_id, user_id) VALUES
-  (1, 1, 2)
+  (1, 1, 2),  -- Safe Air admin
+  (2, 2, 2),  -- Sky Connect admin
+  (3, 3, 2),  -- Global Wings admin
+  (4, 4, 2)   -- Euro Wings admin
 ON CONFLICT (id) DO NOTHING;
 
 INSERT INTO passengers (id, fname, lname, dob, phone, email, passport) VALUES

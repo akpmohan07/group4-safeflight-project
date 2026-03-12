@@ -75,3 +75,7 @@ Thumbs.db
 hs_err_pid*
 replay_pid*
 aws/safeflight-app-key.pem
+
+# Local test case CSVs
+unit-tests-epic3.csv
+integration-tests-epic3.csv

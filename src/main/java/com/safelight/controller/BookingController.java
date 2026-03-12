@@ -103,10 +103,16 @@ public class BookingController {
         }
         FlightSchedule schedule = scheduleOpt.get();
 
-        // Gather already booked seats for this schedule
+        // Gather already booked seats for this schedule (only confirmed + paid bookings)
         List<BookingPassenger> existing = bookingPassengerRepository
                 .findByBooking_FlightSchedule_Id(schedule.getId());
         Set<String> takenSeats = existing.stream()
+                .filter(bp -> {
+                    Booking b = bp.getBooking();
+                    return b.getStatus() != null &&
+                           b.getStatus().equalsIgnoreCase("CONFIRMED") &&
+                           (b.getPaymentStatus() == null || b.getPaymentStatus().equalsIgnoreCase("SUCCESS"));
+                })
                 .map(BookingPassenger::getSeatNo)
                 .filter(Objects::nonNull)
                 .map(String::toUpperCase)
