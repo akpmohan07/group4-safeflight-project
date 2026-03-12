@@ -1,10 +1,33 @@
 import React, { useEffect, useState } from 'react';
 import { Link } from 'react-router-dom';
+import { useAuth } from '../context/AuthContext';
 
 function ProfilePage({ user }) {
+  const { refreshMe } = useAuth();
   const [bookings, setBookings] = useState([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState('');
+  const [profileForm, setProfileForm] = useState({
+    fname: '',
+    lname: '',
+    phone: '',
+    dob: '',
+    country: ''
+  });
+  const [profileSaving, setProfileSaving] = useState(false);
+  const [profileMessage, setProfileMessage] = useState(null);
+  const [editingProfile, setEditingProfile] = useState(false);
+
+  const syncFormFromUser = () => {
+    if (!user) return;
+    setProfileForm({
+      fname: user.fname || '',
+      lname: user.lname || '',
+      phone: user.phone || '',
+      dob: user.dob ? String(user.dob).slice(0, 10) : '',
+      country: user.country || ''
+    });
+  };
 
   useEffect(() => {
     if (!user) {
@@ -13,6 +36,7 @@ function ProfilePage({ user }) {
       setError('');
       return;
     }
+    syncFormFromUser();
     let cancelled = false;
     const load = async () => {
       try {
@@ -34,7 +58,42 @@ function ProfilePage({ user }) {
     return () => {
       cancelled = true;
     };
-  }, []);
+  }, [user]);
+
+  const handleProfileChange = (e) => {
+    const { name, value } = e.target;
+    setProfileForm((prev) => ({ ...prev, [name]: value }));
+  };
+
+  const handleUpdateProfile = async (e) => {
+    e.preventDefault();
+    setProfileMessage(null);
+    setProfileSaving(true);
+    try {
+      const res = await fetch('/api/auth/me', {
+        method: 'PUT',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(profileForm)
+      });
+      if (!res.ok) {
+        const text = await res.text();
+        throw new Error(text || 'Update failed');
+      }
+      await refreshMe();
+      setProfileMessage('Profile updated successfully.');
+      setEditingProfile(false);
+    } catch (e) {
+      setProfileMessage(e.message || 'Failed to update profile.');
+    } finally {
+      setProfileSaving(false);
+    }
+  };
+
+  const handleCancelEdit = () => {
+    setEditingProfile(false);
+    setProfileMessage(null);
+    syncFormFromUser();
+  };
 
   if (!user) {
     return <div className="alert alert-warning">You are not logged in.</div>;
@@ -52,20 +111,99 @@ function ProfilePage({ user }) {
             <div className="card shadow-sm h-100">
               <div className="card-body">
                 <h5 className="card-title mb-3">User details</h5>
-                <dl className="row mb-0">
-                  <dt className="col-sm-5">Name</dt>
-                  <dd className="col-sm-7">
-                    {user.fname} {user.lname}
-                  </dd>
-                  <dt className="col-sm-5">Email</dt>
-                  <dd className="col-sm-7">{user.email}</dd>
-                  <dt className="col-sm-5">Role</dt>
-                  <dd className="col-sm-7">{user.role}</dd>
-                  <dt className="col-sm-5">Phone</dt>
-                  <dd className="col-sm-7">{user.phone || '-'}</dd>
-                  <dt className="col-sm-5">Country</dt>
-                  <dd className="col-sm-7">{user.country || '-'}</dd>
-                </dl>
+                <form onSubmit={handleUpdateProfile}>
+                  <div className="mb-2">
+                    <label className="form-label small text-muted">Email</label>
+                    <input
+                      type="email"
+                      className="form-control form-control-sm"
+                      value={user.email || ''}
+                      readOnly
+                      disabled
+                    />
+                  </div>
+                  <div className="mb-2">
+                    <label className="form-label small">First name</label>
+                    <input
+                      name="fname"
+                      type="text"
+                      className="form-control form-control-sm"
+                      value={editingProfile ? profileForm.fname : (user.fname || '')}
+                      onChange={handleProfileChange}
+                      disabled={!editingProfile}
+                    />
+                  </div>
+                  <div className="mb-2">
+                    <label className="form-label small">Last name</label>
+                    <input
+                      name="lname"
+                      type="text"
+                      className="form-control form-control-sm"
+                      value={editingProfile ? profileForm.lname : (user.lname || '')}
+                      onChange={handleProfileChange}
+                      disabled={!editingProfile}
+                    />
+                  </div>
+                  <div className="mb-2">
+                    <label className="form-label small">Phone</label>
+                    <input
+                      name="phone"
+                      type="tel"
+                      className="form-control form-control-sm"
+                      value={editingProfile ? profileForm.phone : (user.phone || '')}
+                      onChange={handleProfileChange}
+                      disabled={!editingProfile}
+                    />
+                  </div>
+                  <div className="mb-2">
+                    <label className="form-label small">Date of birth</label>
+                    <input
+                      name="dob"
+                      type="date"
+                      className="form-control form-control-sm"
+                      value={editingProfile ? profileForm.dob : (user.dob ? String(user.dob).slice(0, 10) : '')}
+                      onChange={handleProfileChange}
+                      disabled={!editingProfile}
+                    />
+                  </div>
+                  <div className="mb-3">
+                    <label className="form-label small">Country</label>
+                    <input
+                      name="country"
+                      type="text"
+                      className="form-control form-control-sm"
+                      value={editingProfile ? profileForm.country : (user.country || '')}
+                      onChange={handleProfileChange}
+                      disabled={!editingProfile}
+                    />
+                  </div>
+                  {profileMessage && (
+                    <div className={`small mb-2 ${profileMessage.startsWith('Profile updated') ? 'text-success' : 'text-danger'}`}>
+                      {profileMessage}
+                    </div>
+                  )}
+                  {editingProfile ? (
+                    <div className="d-flex gap-2">
+                      <button type="submit" className="btn btn-primary btn-sm" disabled={profileSaving}>
+                        {profileSaving ? 'Saving...' : 'Save'}
+                      </button>
+                      <button type="button" className="btn btn-outline-secondary btn-sm" onClick={handleCancelEdit} disabled={profileSaving}>
+                        Cancel
+                      </button>
+                    </div>
+                  ) : (
+                    <button
+                      type="button"
+                      className="btn btn-outline-primary btn-sm"
+                      onClick={() => {
+                        syncFormFromUser();
+                        setEditingProfile(true);
+                      }}
+                    >
+                      Edit
+                    </button>
+                  )}
+                </form>
               </div>
             </div>
           </div>

@@ -13,6 +13,7 @@ public class FlightSearchResultDto {
     private LocalTime travelTime;
     private String fromAirport;
     private String toAirport;
+    private Integer priceFrom;
 
     public Integer getScheduleId() {
         return scheduleId;
@@ -76,5 +77,13 @@ public class FlightSearchResultDto {
 
     public void setToAirport(String toAirport) {
         this.toAirport = toAirport;
+    }
+
+    public Integer getPriceFrom() {
+        return priceFrom;
+    }
+
+    public void setPriceFrom(Integer priceFrom) {
+        this.priceFrom = priceFrom;
     }
 }

@@ -16,8 +16,6 @@ function PassengerDetailsPage() {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState('');
   const [passengersBySeat, setPassengersBySeat] = useState({});
-  const [saving, setSaving] = useState(false);
-  const [bookingError, setBookingError] = useState('');
 
   useEffect(() => {
     if (!selectedSeats.length) {
@@ -85,50 +83,41 @@ function PassengerDetailsPage() {
       );
     });
 
-  const handleNext = async () => {
+  const handleNext = () => {
     if (!canContinue) return;
-    setSaving(true);
-    setBookingError('');
-    try {
-      const payload = {
-        scheduleId: Number(scheduleId),
-        seats: selectedSeats.map((seatNo) => {
-          const p = passengersBySeat[seatNo];
-          return {
-            seatNo,
-            fname: p.fname,
-            lname: p.lname,
-            dob: p.dob,
-            phone: p.phone,
-            email: p.email,
-            passport: p.passport
-          };
-        })
-      };
-
-      const res = await fetch('/api/bookings', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify(payload)
-      });
-
-      if (!res.ok) {
-        const text = await res.text();
-        throw new Error(text || 'Booking failed');
-      }
-
-      const bookingSummary = await res.json();
-      navigate('/payment', {
-        state: {
-          booking: bookingSummary,
-          totalAmount: totalAmount != null ? totalAmount : undefined
-        }
-      });
-    } catch (e) {
-      setBookingError(e.message || 'Booking failed');
-    } finally {
-      setSaving(false);
+    const payload = {
+      scheduleId: Number(scheduleId),
+      seats: selectedSeats.map((seatNo) => {
+        const p = passengersBySeat[seatNo];
+        return {
+          seatNo,
+          fname: p.fname,
+          lname: p.lname,
+          dob: p.dob,
+          phone: p.phone,
+          email: p.email,
+          passport: p.passport
+        };
+      })
     };
+    const flightSummary = data
+      ? {
+          flightCode: data.flightCode,
+          fromAirport: data.fromAirport,
+          toAirport: data.toAirport,
+          airlineName: data.airlineName,
+          travelDate: data.travelDate,
+          travelTime: data.travelTime,
+          seats: selectedSeats.slice()
+        }
+      : null;
+    navigate('/payment', {
+      state: {
+        bookingPayload: payload,
+        flightSummary,
+        totalAmount: totalAmount != null ? totalAmount : undefined
+      }
+    });
   };
 
   if (!selectedSeats.length) {
@@ -264,18 +253,14 @@ function PassengerDetailsPage() {
               </div>
             )}
 
-            {bookingError && (
-              <div className="alert alert-danger mt-2 mb-0">{bookingError}</div>
-            )}
-
             <div className="d-flex justify-content-end mt-3">
               <button
                 type="button"
                 className="btn btn-primary"
-                disabled={!canContinue || saving}
+                disabled={!canContinue}
                 onClick={handleNext}
               >
-                {saving ? 'Saving...' : 'Proceed to payment'}
+                Proceed to payment
               </button>
             </div>
           </div>

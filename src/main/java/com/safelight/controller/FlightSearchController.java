@@ -12,6 +12,9 @@ import org.springframework.format.annotation.DateTimeFormat;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
+import com.fasterxml.jackson.databind.JsonNode;
+import com.fasterxml.jackson.databind.ObjectMapper;
+
 import java.time.LocalDate;
 import java.util.List;
 import java.util.Optional;
@@ -94,6 +97,8 @@ public class FlightSearchController {
         return r;
     }
 
+    private final ObjectMapper objectMapper = new ObjectMapper();
+
     private FlightSearchResultDto toSearchResult(FlightSchedule s) {
         FlightSearchResultDto dto = new FlightSearchResultDto();
         dto.setScheduleId(s.getId());
@@ -104,6 +109,28 @@ public class FlightSearchController {
         dto.setAirlineName(s.getFlight().getAirline().getName());
         dto.setFromAirport(s.getRoute().getFromDestination().getAirport());
         dto.setToAirport(s.getRoute().getToDestination().getAirport());
+        if (s.getFlight() != null && s.getFlight().getFlightModel() != null) {
+            dto.setPriceFrom(extractPriceFrom(s.getFlight().getFlightModel().getSeatMapping()));
+        }
         return dto;
+    }
+
+    private Integer extractPriceFrom(String seatMappingJson) {
+        if (seatMappingJson == null || seatMappingJson.isBlank()) return null;
+        try {
+            JsonNode root = objectMapper.readTree(seatMappingJson);
+            JsonNode pricing = root.path("seatPricing");
+            if (!pricing.isObject()) return null;
+            int min = Integer.MAX_VALUE;
+            for (JsonNode value : pricing) {
+                if (value.isNumber()) {
+                    int p = value.asInt();
+                    if (p < min) min = p;
+                }
+            }
+            return min == Integer.MAX_VALUE ? null : min;
+        } catch (Exception e) {
+            return null;
+        }
     }
 }

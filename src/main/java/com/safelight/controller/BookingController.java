@@ -128,8 +128,8 @@ public class BookingController {
         Booking booking = new Booking();
         booking.setUser(userOpt.get());
         booking.setFlightSchedule(schedule);
-        booking.setStatus("PENDING");
-        booking.setPaymentStatus("PENDING");
+        booking.setStatus("CONFIRMED");
+        booking.setPaymentStatus("SUCCESS");
         booking.setBookedTime(LocalDateTime.now());
         booking = bookingRepository.save(booking);
 

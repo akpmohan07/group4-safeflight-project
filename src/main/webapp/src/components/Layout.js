@@ -22,7 +22,7 @@ function Layout({ children }) {
             {user && (
               <>
                 <Link className="nav-link text-muted text-decoration-none small" to="/profile" title="Profile">
-                  {user.email} ({user.role})
+                  {user.email}
                 </Link>
                 <button type="button" className="btn btn-outline-secondary btn-sm" onClick={handleLogout}>
                   Logout
