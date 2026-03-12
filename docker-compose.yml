@@ -20,9 +20,9 @@ services:
 
   app:
     image: ${DOCKER_REGISTRY:-docker.io}/${IMAGE_NAME:-harrishka/safeflight}:latest
-    build:
-      context: .
-      dockerfile: Dockerfile
+    # build:
+    #   context: .
+    #   dockerfile: Dockerfile
     container_name: safeflight-app
     depends_on:
       db:
