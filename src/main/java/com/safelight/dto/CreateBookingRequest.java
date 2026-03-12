@@ -31,6 +31,7 @@ public class CreateBookingRequest {
         private String phone;
         private String email;
         private String passport;
+        private Integer baggageQuantity;
 
         public String getSeatNo() {
             return seatNo;
@@ -86,6 +87,14 @@ public class CreateBookingRequest {
 
         public void setPassport(String passport) {
             this.passport = passport;
+        }
+
+        public Integer getBaggageQuantity() {
+            return baggageQuantity;
+        }
+
+        public void setBaggageQuantity(Integer baggageQuantity) {
+            this.baggageQuantity = baggageQuantity;
         }
     }
 }

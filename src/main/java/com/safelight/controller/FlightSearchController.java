@@ -77,7 +77,12 @@ public class FlightSearchController {
         dto.setSeatMapping(schedule.getFlight().getFlightModel().getSeatMapping());
 
         java.util.List<String> bookedSeats = schedule.getBookings().stream()
-                .filter(b -> b.getStatus() == null || !b.getStatus().equalsIgnoreCase("CANCELLED"))
+                // Only lock seats for fully confirmed + paid bookings
+                .filter(b ->
+                        b.getStatus() != null &&
+                                b.getStatus().equalsIgnoreCase("CONFIRMED") &&
+                                (b.getPaymentStatus() == null || b.getPaymentStatus().equalsIgnoreCase("SUCCESS"))
+                )
                 .flatMap(b -> b.getBookingPassengers().stream())
                 .map(BookingPassenger::getSeatNo)
                 .filter(seatNo -> seatNo != null && !seatNo.isBlank())

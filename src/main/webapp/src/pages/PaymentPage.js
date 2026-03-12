@@ -7,6 +7,9 @@ function PaymentPage() {
   const bookingPayload = state?.bookingPayload;
   const flightSummary = state?.flightSummary;
   const totalAmount = state?.totalAmount;
+  const seatTotal = state?.seatTotal;
+  const baggageTotal = state?.baggageTotal;
+  const bagPrice = state?.bagPrice;
   const formatCurrency = (n) => (n != null && !Number.isNaN(n))
     ? `$${Number(n).toLocaleString('en-US', { minimumFractionDigits: 0, maximumFractionDigits: 0 })}`
     : '';
@@ -27,6 +30,17 @@ function PaymentPage() {
   const [status, setStatus] = useState(null);
   const [paymentError, setPaymentError] = useState(null);
 
+  const isCardValid =
+    card.number.trim().length >= 12 &&
+    card.expiry.trim().length >= 4 &&
+    card.cvv.trim().length >= 3;
+
+  const isBillingValid =
+    billing.addressLine1.trim() &&
+    billing.city.trim() &&
+    billing.postalCode.trim() &&
+    billing.country.trim();
+
   if (!bookingPayload || !bookingPayload.seats?.length) {
     return (
       <div className="alert alert-warning">
@@ -46,6 +60,10 @@ function PaymentPage() {
   };
 
   const handlePay = async () => {
+    if (!isCardValid || !isBillingValid) {
+      setPaymentError('Please fill in card details and billing address to complete the transaction.');
+      return;
+    }
     setPaymentError(null);
     setStatus('pending');
     try {
@@ -77,13 +95,29 @@ function PaymentPage() {
       <div className="col-md-8">
         <div className="d-flex justify-content-between align-items-center mb-3">
           <h5 className="mb-0">Payment</h5>
-          <button
-            type="button"
-            className="btn btn-outline-secondary btn-sm"
-            onClick={() => navigate('/')}
-          >
-            Back to home
-          </button>
+          <div className="d-flex gap-2">
+            <button
+              type="button"
+              className="btn btn-outline-secondary btn-sm"
+              onClick={() =>
+                navigate(`/passengers/${bookingPayload.scheduleId}`, {
+                  state: {
+                    selectedSeats: bookingPayload.seats.map((s) => s.seatNo),
+                    passengersBySeat: state?.passengersBySeat
+                  }
+                })
+              }
+            >
+              ← Back
+            </button>
+            <button
+              type="button"
+              className="btn btn-outline-secondary btn-sm"
+              onClick={() => navigate('/')}
+            >
+              Back to home
+            </button>
+          </div>
         </div>
 
         <div className="card mb-3">
@@ -103,7 +137,22 @@ function PaymentPage() {
             )}
             {totalAmount != null && totalAmount > 0 && (
               <div className="small mt-2 pt-2 border-top">
-                <strong>Amount due:</strong> <span className="text-primary fw-semibold">{formatCurrency(totalAmount)}</span>
+                {seatTotal != null && (
+                  <div className="d-flex justify-content-between">
+                    <span>Seat fare</span>
+                    <span>{formatCurrency(seatTotal)}</span>
+                  </div>
+                )}
+                {baggageTotal != null && (
+                  <div className="d-flex justify-content-between text-muted">
+                    <span>Baggage{bagPrice != null ? ` (${formatCurrency(bagPrice)} per kg)` : ''}</span>
+                    <span>{formatCurrency(baggageTotal)}</span>
+                  </div>
+                )}
+                <div className="d-flex justify-content-between mt-1 pt-2 border-top">
+                  <strong>Amount due</strong>
+                  <strong className="text-primary">{formatCurrency(totalAmount)}</strong>
+                </div>
               </div>
             )}
           </div>

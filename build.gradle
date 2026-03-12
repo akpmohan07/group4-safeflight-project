@@ -41,6 +41,9 @@ dependencies {
     // iText 7 for PDF ticket export
     implementation 'com.itextpdf:itext7-core:7.2.5'
 
+    // Jackson for JSON parsing in controllers
+    implementation 'com.fasterxml.jackson.core:jackson-databind'
+
     // Test dependencies - exclude conflicting loggers
     testImplementation('org.springframework.boot:spring-boot-starter-test') {
         exclude group: 'org.springframework.boot', module: 'spring-boot-starter-logging'

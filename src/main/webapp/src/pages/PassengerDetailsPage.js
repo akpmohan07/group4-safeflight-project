@@ -7,7 +7,8 @@ function PassengerDetailsPage() {
   const navigate = useNavigate();
   const selectedSeats = (location.state && location.state.selectedSeats) || [];
   const seatPricingSummary = location.state?.seatPricingSummary || null;
-  const totalAmount = seatPricingSummary?.totalAmount;
+  const seatTotal = seatPricingSummary?.totalAmount || 0;
+  const BAG_PRICE = 10;
   const formatCurrency = (n) => (n != null && !Number.isNaN(n))
     ? `$${Number(n).toLocaleString('en-US', { minimumFractionDigits: 0, maximumFractionDigits: 0 })}`
     : '';
@@ -15,7 +16,9 @@ function PassengerDetailsPage() {
   const [data, setData] = useState(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState('');
-  const [passengersBySeat, setPassengersBySeat] = useState({});
+  const [passengersBySeat, setPassengersBySeat] = useState(
+    location.state?.passengersBySeat || {}
+  );
 
   useEffect(() => {
     if (!selectedSeats.length) {
@@ -55,7 +58,8 @@ function PassengerDetailsPage() {
           dob: '',
           phone: '',
           email: '',
-          passport: ''
+          passport: '',
+          baggageQuantity: '0'
         }),
         [field]: value
       }
@@ -85,10 +89,23 @@ function PassengerDetailsPage() {
 
   const handleNext = () => {
     if (!canContinue) return;
+    const baggageTotal = selectedSeats.reduce((sum, seatNo) => {
+      const p = passengersBySeat[seatNo];
+      const qty =
+        p && p.baggageQuantity !== undefined && p.baggageQuantity !== ''
+          ? Number(p.baggageQuantity)
+          : 0;
+      return sum + (Number.isFinite(qty) && qty > 0 ? qty : 0);
+    }, 0) * BAG_PRICE;
+    const grandTotal = seatTotal + baggageTotal;
     const payload = {
       scheduleId: Number(scheduleId),
       seats: selectedSeats.map((seatNo) => {
         const p = passengersBySeat[seatNo];
+        const baggageQuantity =
+          p.baggageQuantity !== undefined && p.baggageQuantity !== ''
+            ? Number(p.baggageQuantity)
+            : 0;
         return {
           seatNo,
           fname: p.fname,
@@ -96,7 +113,8 @@ function PassengerDetailsPage() {
           dob: p.dob,
           phone: p.phone,
           email: p.email,
-          passport: p.passport
+          passport: p.passport,
+          baggageQuantity
         };
       })
     };
@@ -115,7 +133,11 @@ function PassengerDetailsPage() {
       state: {
         bookingPayload: payload,
         flightSummary,
-        totalAmount: totalAmount != null ? totalAmount : undefined
+        totalAmount: Number.isFinite(grandTotal) && grandTotal > 0 ? grandTotal : undefined,
+        seatTotal: Number.isFinite(seatTotal) && seatTotal > 0 ? seatTotal : undefined,
+        baggageTotal: Number.isFinite(baggageTotal) && baggageTotal > 0 ? baggageTotal : 0,
+        bagPrice: BAG_PRICE,
+        passengersBySeat
       }
     });
   };
@@ -163,7 +185,8 @@ function PassengerDetailsPage() {
                   dob: '',
                   phone: '',
                   email: '',
-                  passport: ''
+                  passport: '',
+                  baggageQuantity: '0'
                 };
               return (
                 <div className="row g-3 mb-3" key={seatId}>
@@ -240,16 +263,68 @@ function PassengerDetailsPage() {
                           }
                         />
                       </div>
+                      <div className="col-md-6">
+                        <label className="form-label">Baggage (kg)</label>
+                        <input
+                          type="number"
+                          min="0"
+                          className="form-control"
+                          value={passenger.baggageQuantity}
+                          onChange={(e) => {
+                            const raw = e.target.value;
+                            if (raw === '') {
+                              handlePassengerChange(seatId, 'baggageQuantity', '');
+                              return;
+                            }
+                            const num = Number(raw);
+                            const safe = !Number.isFinite(num) || num < 0 ? '0' : String(num);
+                            handlePassengerChange(seatId, 'baggageQuantity', safe);
+                          }}
+                        />
+                      </div>
                     </div>
                   </div>
                 </div>
               );
             })}
 
-            {totalAmount != null && totalAmount > 0 && (
-              <div className="d-flex justify-content-between align-items-center mt-3 py-2 px-2 bg-light rounded">
-                <span className="fw-semibold">Total amount</span>
-                <span className="fw-bold text-primary">{formatCurrency(totalAmount)}</span>
+            {selectedSeats.length > 0 && (
+              <div className="mt-3 py-2 px-2 bg-light rounded">
+                <div className="d-flex justify-content-between align-items-center">
+                  <span className="fw-semibold">Seat fare</span>
+                  <span className="fw-semibold">{formatCurrency(seatTotal)}</span>
+                </div>
+                <div className="d-flex justify-content-between align-items-center small text-muted">
+                  <span>Baggage (${BAG_PRICE} per kg)</span>
+                  <span>
+                    {formatCurrency(
+                      selectedSeats.reduce((sum, seatNo) => {
+                        const p = passengersBySeat[seatNo];
+                        const qty =
+                          p && p.baggageQuantity !== undefined && p.baggageQuantity !== ''
+                            ? Number(p.baggageQuantity)
+                            : 0;
+                        return sum + (Number.isFinite(qty) && qty > 0 ? qty : 0) * BAG_PRICE;
+                      }, 0)
+                    )}
+                  </span>
+                </div>
+                <div className="d-flex justify-content-between align-items-center pt-2 mt-2 border-top">
+                  <span className="fw-semibold">Total amount</span>
+                  <span className="fw-bold text-primary">
+                    {formatCurrency(
+                      seatTotal +
+                        selectedSeats.reduce((sum, seatNo) => {
+                          const p = passengersBySeat[seatNo];
+                          const qty =
+                            p && p.baggageQuantity !== undefined && p.baggageQuantity !== ''
+                              ? Number(p.baggageQuantity)
+                              : 0;
+                          return sum + (Number.isFinite(qty) && qty > 0 ? qty : 0);
+                        }, 0) * BAG_PRICE
+                    )}
+                  </span>
+                </div>
               </div>
             )}
 

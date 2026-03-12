@@ -12,6 +12,7 @@ import org.springframework.http.HttpStatus;
 import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
+import org.springframework.transaction.annotation.Transactional;
 
 import java.io.IOException;
 import java.time.LocalDate;
@@ -78,6 +79,7 @@ public class BookingController {
     }
 
     @PostMapping
+    @Transactional
     public ResponseEntity<?> createBooking(@RequestBody CreateBookingRequest request, HttpSession session) {
         Object idAttr = session.getAttribute("USER_ID");
         if (!(idAttr instanceof Integer)) {
@@ -156,7 +158,11 @@ public class BookingController {
             bp.setPassenger(passenger);
             bp.setSeatNo(seat.getSeatNo().toUpperCase(Locale.ROOT));
             bp.setSeatType(null);
-            bp.setBaggageQuantity(0);
+            Integer baggageQty = seat.getBaggageQuantity();
+            if (baggageQty == null || baggageQty < 0) {
+                baggageQty = 0;
+            }
+            bp.setBaggageQuantity(baggageQty);
             bookingPassengerRepository.save(bp);
 
             bookedSeatList.add(bp.getSeatNo());
