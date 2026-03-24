@@ -15,13 +15,9 @@ env:
   IMAGE_NAME: harrishka/safeflight
 
 jobs:
-  build-and-test:
-    name: Build & Test
+  backend-unit-tests:
+    name: Backend Unit Tests
     runs-on: ubuntu-latest
-
-    permissions:
-      contents: read
-      checks: write
 
     steps:
       - name: Checkout code
@@ -31,7 +27,183 @@ jobs:
         uses: actions/setup-java@v4
         with:
           java-version: '24'
-          distribution: 'oracle'
+          distribution: 'temurin'
+          cache: 'gradle'
+
+      - name: Grant execute permission for gradlew
+        run: chmod +x gradlew
+
+      - name: Run Backend Unit Tests
+        run: ./gradlew unitTest
+
+      - name: Upload Backend Unit Test Results
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: backend-unit-test-results
+          path: build/test-results/unitTest
+          if-no-files-found: warn
+
+      - name: Upload Backend Unit HTML Report
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: backend-unit-html-report
+          path: build/reports/tests/unitTest
+          if-no-files-found: warn
+
+  backend-integration-tests:
+    name: Backend Integration Tests
+    runs-on: ubuntu-latest
+
+    services:
+      postgres:
+        image: postgres:16
+        env:
+          POSTGRES_DB: safeflight
+          POSTGRES_USER: safeflight
+          POSTGRES_PASSWORD: safeflight
+        ports:
+          - 5432:5432
+        options: >-
+          --health-cmd "pg_isready -U safeflight -d safeflight"
+          --health-interval 10s
+          --health-timeout 5s
+          --health-retries 5
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Set up JDK 24
+        uses: actions/setup-java@v4
+        with:
+          java-version: '24'
+          distribution: 'temurin'
+          cache: 'gradle'
+
+      - name: Grant execute permission for gradlew
+        run: chmod +x gradlew
+
+      - name: Run Backend Integration Tests
+        env:
+          SPRING_DATASOURCE_URL: jdbc:postgresql://localhost:5432/safeflight
+          SPRING_DATASOURCE_USERNAME: safeflight
+          SPRING_DATASOURCE_PASSWORD: safeflight
+        run: ./gradlew integrationTest
+
+      - name: Generate Backend Coverage Report
+        env:
+          SPRING_DATASOURCE_URL: jdbc:postgresql://localhost:5432/safeflight
+          SPRING_DATASOURCE_USERNAME: safeflight
+          SPRING_DATASOURCE_PASSWORD: safeflight
+        run: ./gradlew coverage
+
+      - name: Upload Backend Integration Test Results
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: backend-integration-test-results
+          path: build/test-results/integrationTest
+          if-no-files-found: warn
+
+      - name: Upload Backend Coverage Summary
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: backend-coverage-summary
+          path: build/reports/jacoco/test
+          if-no-files-found: warn
+
+      - name: Upload Backend Integration HTML Report
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: backend-integration-html-report
+          path: build/reports/tests/integrationTest
+          if-no-files-found: warn
+
+      - name: Upload Backend JaCoCo HTML Report
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: backend-jacoco-html-report
+          path: build/reports/jacoco/test/html
+          if-no-files-found: warn
+
+  frontend-tests:
+    name: Frontend Tests
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Set up Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: '24.13.0'
+          cache: 'npm'
+          cache-dependency-path: 'src/main/webapp/package-lock.json'
+
+      - name: Run Frontend Tests
+        working-directory: src/main/webapp
+        run: |
+          npm ci
+          npm run coverage:check -- --json --outputFile=coverage/test-results.json --coverageReporters=json-summary --coverageReporters=lcov --coverageReporters=text
+
+      - name: Upload Frontend Coverage Summary
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: frontend-coverage-summary
+          path: src/main/webapp/coverage
+          if-no-files-found: warn
+
+      - name: Upload Frontend Test Results
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: frontend-test-results
+          path: src/main/webapp/coverage
+          if-no-files-found: warn
+
+      - name: Upload Frontend HTML Coverage Report
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: frontend-lcov-html-report
+          path: src/main/webapp/coverage/lcov-report
+          if-no-files-found: warn
+
+  e2e-tests:
+    name: System E2E Tests
+    runs-on: ubuntu-latest
+
+    services:
+      postgres:
+        image: postgres:16
+        env:
+          POSTGRES_DB: safeflight
+          POSTGRES_USER: safeflight
+          POSTGRES_PASSWORD: safeflight
+        ports:
+          - 5432:5432
+        options: >-
+          --health-cmd "pg_isready -U safeflight -d safeflight"
+          --health-interval 10s
+          --health-timeout 5s
+          --health-retries 5
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Set up JDK 24
+        uses: actions/setup-java@v4
+        with:
+          java-version: '24'
+          distribution: 'temurin'
           cache: 'gradle'
 
       - name: Set up Node.js
@@ -44,11 +216,357 @@ jobs:
       - name: Grant execute permission for gradlew
         run: chmod +x gradlew
 
-      - name: Run Tests
-        run: ./gradlew test
+      - name: Install frontend dependencies and Playwright browser
+        working-directory: src/main/webapp
+        run: |
+          npm ci
+          npx playwright install --with-deps chromium
+
+      - name: Start backend application
+        env:
+          SPRING_DATASOURCE_URL: jdbc:postgresql://localhost:5432/safeflight
+          SPRING_DATASOURCE_USERNAME: safeflight
+          SPRING_DATASOURCE_PASSWORD: safeflight
+          CI: "false"
+        run: |
+          ./gradlew --no-daemon bootRun > bootrun.log 2>&1 &
+          echo $! > bootrun.pid
+          echo "BootRun started with PID $(cat bootrun.pid)"
+
+      - name: Wait for backend readiness
+        run: |
+          BACKEND_PID="$(cat bootrun.pid)"
+          for i in {1..120}; do
+            if ! kill -0 "$BACKEND_PID" 2>/dev/null; then
+              echo "Backend process exited before readiness"
+              echo "===== bootrun.log (last 200 lines) ====="
+              tail -n 200 bootrun.log || true
+              exit 1
+            fi
+
+            status="$(curl -s -o /dev/null -w "%{http_code}" http://localhost:8080/ || true)"
+            if [ "$status" != "000" ]; then
+              echo "Backend is ready"
+              exit 0
+            fi
+            echo "Waiting for backend... attempt $i/120"
+            sleep 5
+          done
+
+          echo "Backend did not become ready in time"
+          echo "===== bootrun.log (last 200 lines) ====="
+          tail -n 200 bootrun.log || true
+          exit 1
+
+      - name: Upload backend boot log
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: backend-bootrun-log
+          path: bootrun.log
+          if-no-files-found: warn
+
+      - name: Run Playwright E2E (headless in CI)
+        working-directory: src/main/webapp
+        env:
+          E2E_BASE_URL: http://localhost:8080
+        run: npm run e2e:ci
+
+      - name: Upload Playwright HTML Report
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: playwright-html-report
+          path: src/main/webapp/playwright-report
+          if-no-files-found: warn
+
+      - name: Upload Playwright Test Results
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: playwright-test-results
+          path: src/main/webapp/test-results
+          if-no-files-found: warn
+
+  pr-test-report:
+    name: PR Test Report Comment
+    if: always() && github.event_name == 'pull_request'
+    needs: [backend-unit-tests, backend-integration-tests, frontend-tests, e2e-tests]
+    runs-on: ubuntu-latest
+    permissions:
+      pull-requests: write
+      contents: read
+      actions: read
+
+    steps:
+      - name: Download Backend Unit Test Results
+        uses: actions/download-artifact@v4
+        with:
+          name: backend-unit-test-results
+          path: artifacts/backend-unit
         continue-on-error: true
 
+      - name: Download Backend Integration Test Results
+        uses: actions/download-artifact@v4
+        with:
+          name: backend-integration-test-results
+          path: artifacts/backend-integration
+        continue-on-error: true
+
+      - name: Download Frontend Coverage Summary
+        uses: actions/download-artifact@v4
+        with:
+          name: frontend-coverage-summary
+          path: artifacts/frontend
+        continue-on-error: true
+
+      - name: Download Frontend Test Results
+        uses: actions/download-artifact@v4
+        with:
+          name: frontend-test-results
+          path: artifacts/frontend-tests
+        continue-on-error: true
+
+      - name: Download Backend Coverage Summary
+        uses: actions/download-artifact@v4
+        with:
+          name: backend-coverage-summary
+          path: artifacts/backend-coverage
+        continue-on-error: true
+
+      - name: Download Backend Unit HTML Report
+        uses: actions/download-artifact@v4
+        with:
+          name: backend-unit-html-report
+          path: artifacts/html/backend-unit
+        continue-on-error: true
+
+      - name: Download Backend Integration HTML Report
+        uses: actions/download-artifact@v4
+        with:
+          name: backend-integration-html-report
+          path: artifacts/html/backend-integration
+        continue-on-error: true
+
+      - name: Download Backend JaCoCo HTML Report
+        uses: actions/download-artifact@v4
+        with:
+          name: backend-jacoco-html-report
+          path: artifacts/html/backend-jacoco
+        continue-on-error: true
+
+      - name: Download Frontend HTML Coverage Report
+        uses: actions/download-artifact@v4
+        with:
+          name: frontend-lcov-html-report
+          path: artifacts/html/frontend-lcov
+        continue-on-error: true
+
+      - name: Download Playwright Test Results
+        uses: actions/download-artifact@v4
+        with:
+          name: playwright-test-results
+          path: artifacts/e2e-tests
+        continue-on-error: true
+
+      - name: Download Playwright HTML Report
+        uses: actions/download-artifact@v4
+        with:
+          name: playwright-html-report
+          path: artifacts/html/playwright
+        continue-on-error: true
+
+      - name: Build Combined HTML Reports Folder
+        run: |
+          mkdir -p aggregated-reports
+          [ -d artifacts/html/backend-unit ] && cp -R artifacts/html/backend-unit aggregated-reports/ || true
+          [ -d artifacts/html/backend-integration ] && cp -R artifacts/html/backend-integration aggregated-reports/ || true
+          [ -d artifacts/html/backend-jacoco ] && cp -R artifacts/html/backend-jacoco aggregated-reports/ || true
+          [ -d artifacts/html/frontend-lcov ] && cp -R artifacts/html/frontend-lcov aggregated-reports/ || true
+          [ -d artifacts/html/playwright ] && cp -R artifacts/html/playwright aggregated-reports/ || true
+          echo "Combined HTML test reports from this workflow run." > aggregated-reports/README.txt
+
+      - name: Upload Combined Test Reports Artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: all-test-reports
+          path: aggregated-reports
+          if-no-files-found: warn
+
+      - name: Resolve Combined Artifact Download URL
+        run: echo "Using manual artifact download from run page."
+
+      - name: Build PR Comment Body
+        id: report
+        env:
+          RUN_URL: ${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }}
+        run: |
+          python3 - <<'PY'
+          import glob
+          import json
+          import os
+          import xml.etree.ElementTree as ET
+
+          def junit_summary(pattern):
+              files = glob.glob(pattern, recursive=True)
+              tests = failures = errors = skipped = 0
+              for file in files:
+                  try:
+                      root = ET.parse(file).getroot()
+                  except Exception:
+                      continue
+                  if root.tag == "testsuite":
+                      tests += int(root.attrib.get("tests", 0))
+                      failures += int(root.attrib.get("failures", 0))
+                      errors += int(root.attrib.get("errors", 0))
+                      skipped += int(root.attrib.get("skipped", 0))
+                  elif root.tag == "testsuites":
+                      for suite in root.findall("testsuite"):
+                          tests += int(suite.attrib.get("tests", 0))
+                          failures += int(suite.attrib.get("failures", 0))
+                          errors += int(suite.attrib.get("errors", 0))
+                          skipped += int(suite.attrib.get("skipped", 0))
+              passed = tests - failures - errors - skipped
+              pass_pct = round((passed / tests) * 100, 2) if tests else 0.0
+              return tests, passed, failures, errors, skipped, pass_pct
+
+          u = junit_summary("artifacts/backend-unit/**/*.xml")
+          i = junit_summary("artifacts/backend-integration/**/*.xml")
+
+          cov_line = "N/A"
+          cov_func = "N/A"
+          cov_stmt = "N/A"
+          cov_branch = "N/A"
+          backend_line_cov = "N/A"
+          f_total = f_passed = f_failed = f_errors = f_skipped = 0
+          f_pass_pct = 0.0
+          e_total = e_passed = e_failed = e_errors = e_skipped = 0
+          e_pass_pct = 0.0
+          cov_files = glob.glob("artifacts/frontend/**/coverage-summary.json", recursive=True)
+          if cov_files:
+              with open(cov_files[0], "r", encoding="utf-8") as f:
+                  data = json.load(f)
+                  total = data.get("total", {})
+                  cov_line = f"{total.get('lines', {}).get('pct', 'N/A')}%"
+                  cov_func = f"{total.get('functions', {}).get('pct', 'N/A')}%"
+                  cov_stmt = f"{total.get('statements', {}).get('pct', 'N/A')}%"
+                  cov_branch = f"{total.get('branches', {}).get('pct', 'N/A')}%"
+
+          frontend_test_files = glob.glob("artifacts/frontend-tests/**/test-results.json", recursive=True)
+          if frontend_test_files:
+              try:
+                  with open(frontend_test_files[0], "r", encoding="utf-8") as f:
+                      r = json.load(f)
+                      f_total = int(r.get("numTotalTests", 0))
+                      f_passed = int(r.get("numPassedTests", 0))
+                      f_failed = int(r.get("numFailedTests", 0))
+                      f_skipped = int(r.get("numPendingTests", 0))
+                      f_errors = int(r.get("numRuntimeErrorTestSuites", 0))
+                      f_pass_pct = round((f_passed / f_total) * 100, 2) if f_total else 0.0
+              except Exception:
+                  pass
+
+          e2e_result_files = glob.glob("artifacts/e2e-tests/**/e2e-results.json", recursive=True)
+          if e2e_result_files:
+              try:
+                  with open(e2e_result_files[0], "r", encoding="utf-8") as f:
+                      e = json.load(f)
+                      stats = e.get("stats", {})
+                      expected = int(stats.get("expected", 0))
+                      unexpected = int(stats.get("unexpected", 0))
+                      flaky = int(stats.get("flaky", 0))
+                      skipped = int(stats.get("skipped", 0))
+                      interrupted = int(stats.get("interrupted", 0))
+                      e_total = expected + unexpected + flaky + skipped
+                      e_passed = expected + flaky
+                      e_failed = unexpected
+                      e_errors = interrupted
+                      e_skipped = skipped
+                      e_pass_pct = round((e_passed / e_total) * 100, 2) if e_total else 0.0
+              except Exception:
+                  pass
+
+          backend_cov_files = glob.glob("artifacts/backend-coverage/**/jacocoTestReport.xml", recursive=True)
+          if backend_cov_files:
+              try:
+                  root = ET.parse(backend_cov_files[0]).getroot()
+                  line_counter = next(
+                      (c for c in root.findall("counter") if c.attrib.get("type") == "LINE"),
+                      None,
+                  )
+                  if line_counter is not None:
+                      covered = int(line_counter.attrib.get("covered", 0))
+                      missed = int(line_counter.attrib.get("missed", 0))
+                      total_lines = covered + missed
+                      backend_line_cov = (
+                          f"{round((covered / total_lines) * 100, 2)}%" if total_lines else "0.0%"
+                      )
+              except Exception:
+                  backend_line_cov = "N/A"
+
+          body = f"""## Test Report
+
+          | Suite | Total | Passed | Pass % | Failed | Errors | Skipped |
+          |---|---:|---:|---:|---:|---:|---:|
+          | Backend Unit | {u[0]} | {u[1]} | {u[5]}% | {u[2]} | {u[3]} | {u[4]} |
+          | Backend Integration | {i[0]} | {i[1]} | {i[5]}% | {i[2]} | {i[3]} | {i[4]} |
+          | Frontend | {f_total} | {f_passed} | {f_pass_pct}% | {f_failed} | {f_errors} | {f_skipped} |
+          | E2E (Playwright) | {e_total} | {e_passed} | {e_pass_pct}% | {e_failed} | {e_errors} | {e_skipped} |
+
+          ### Backend Coverage
+          - Line Coverage: {backend_line_cov}
+
+          ### Frontend Coverage
+          - Line Coverage: {cov_line}
+          - Functions: {cov_func}
+          - Statements: {cov_stmt}
+          - Branches: {cov_branch}
+
+          ### HTML Reports
+          - [CI Run Artifacts]({os.getenv('RUN_URL')})
+          - Combined artifact: `all-test-reports`
+          - Download manually from the artifacts list on the run page.
+          """
+          body += (
+              "\n- Includes: backend unit HTML, backend integration HTML, backend JaCoCo HTML, "
+              "frontend lcov HTML, playwright E2E HTML\n"
+          )
+
+          with open("pr_test_report.md", "w", encoding="utf-8") as f:
+              f.write(body)
+          PY
+
+      - name: Comment Test Report on PR
+        uses: marocchino/sticky-pull-request-comment@v2
+        with:
+          header: test-report
+          path: pr_test_report.md
+
+  build-artifact:
+    name: Build Application
+    needs: [backend-unit-tests, backend-integration-tests, frontend-tests, e2e-tests]
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Set up JDK 24
+        uses: actions/setup-java@v4
+        with:
+          java-version: '24'
+          distribution: 'temurin'
+          cache: 'gradle'
+
+      - name: Grant execute permission for gradlew
+        run: chmod +x gradlew
+
       - name: Build Application
+        env:
+          SPRING_DATASOURCE_URL: jdbc:postgresql://localhost:5432/safeflight
+          SPRING_DATASOURCE_USERNAME: safeflight
+          SPRING_DATASOURCE_PASSWORD: safeflight
+          CI: "false"
         run: ./gradlew build -x test
 
       - name: Upload JAR Artifact
@@ -60,7 +578,7 @@ jobs:
 
   docker-build-push:
     name: Build & Push Docker Image
-    needs: build-and-test
+    needs: build-artifact
     runs-on: ubuntu-latest
 
     permissions:
@@ -77,9 +595,6 @@ jobs:
           name: application-jar
           path: build/libs
 
-      - name: Set up Docker Buildx
-        uses: docker/setup-buildx-action@v3
-
       - name: Log in to Docker Hub
         uses: docker/login-action@v3
         with:
@@ -87,21 +602,8 @@ jobs:
           username: ${{ secrets.DOCKER_USERNAME }}
           password: ${{ secrets.DOCKER_PASSWORD }}
 
-      - name: Extract metadata
-        id: meta
-        uses: docker/metadata-action@v5
-        with:
-          images: ${{ env.DOCKER_REGISTRY }}/${{ env.IMAGE_NAME }}
-          tags: |
-            type=ref,event=branch
-            type=sha
+      - name: Build Docker image
+        run: docker build -t ${{ env.DOCKER_REGISTRY }}/${{ env.IMAGE_NAME }}:latest .
 
-      - name: Build and push Docker image
-        uses: docker/build-push-action@v5
-        with:
-          context: .
-          push: true
-          tags: ${{ steps.meta.outputs.tags }}
-          labels: ${{ steps.meta.outputs.labels }}
-          cache-from: type=gha
-          cache-to: type=gha,mode=max
+      - name: Push Docker image
+        run: docker push ${{ env.DOCKER_REGISTRY }}/${{ env.IMAGE_NAME }}:latest
