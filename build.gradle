@@ -3,6 +3,7 @@ plugins {
     id 'org.springframework.boot' version '4.0.2'
     id 'io.spring.dependency-management' version '1.1.7'
     id 'com.github.node-gradle.node' version '7.0.1'
+    id 'jacoco'
 }
 
 group = 'com.safelight'
@@ -27,15 +28,33 @@ dependencies {
     implementation('org.springframework.boot:spring-boot-starter-web') {
         exclude group: 'org.springframework.boot', module: 'spring-boot-starter-logging'
     }
+    implementation('org.springframework.boot:spring-boot-starter-data-jpa') {
+        exclude group: 'org.springframework.boot', module: 'spring-boot-starter-logging'
+    }
 
     // Add Log4j2
     implementation 'org.springframework.boot:spring-boot-starter-log4j2'
+
+    // PostgreSQL JDBC driver
+    runtimeOnly 'org.postgresql:postgresql'
+
+    // iText 7 for PDF ticket export
+    implementation 'com.itextpdf:itext7-core:7.2.5'
+
+    // Jackson for JSON parsing in controllers
+    implementation 'com.fasterxml.jackson.core:jackson-databind'
 
     // Test dependencies - exclude conflicting loggers
     testImplementation('org.springframework.boot:spring-boot-starter-test') {
         exclude group: 'org.springframework.boot', module: 'spring-boot-starter-logging'
         exclude group: 'org.apache.logging.log4j', module: 'log4j-to-slf4j'
     }
+    // Web MVC test support for @WebMvcTest, @AutoConfigureMockMvc, etc. (Boot 4 modular starter)
+    testImplementation('org.springframework.boot:spring-boot-starter-webmvc-test') {
+        exclude group: 'org.springframework.boot', module: 'spring-boot-starter-logging'
+        exclude group: 'org.apache.logging.log4j', module: 'log4j-to-slf4j'
+    }
+    // Use Log4j2 in tests as well
     testImplementation('org.springframework.boot:spring-boot-starter-log4j2') {
         exclude group: 'org.apache.logging.log4j', module: 'log4j-to-slf4j'
     }
@@ -67,17 +86,14 @@ tasks.register('npmBuild', com.github.gradle.node.npm.task.NpmTask) {
     outputs.dir('src/main/webapp/build')
 }
 
-// Copy React build output to Spring Boot static resources
+def generatedFrontendStaticDir = layout.buildDirectory.dir('generated/frontend-static')
+
+// Copy React build output to generated build resources
 tasks.register('copyReactBuild', Copy) {
     dependsOn npmBuild
-    description = 'Copy React build to static resources'
+    description = 'Copy React build to generated static resources'
     from 'src/main/webapp/build'
-    into "${project.projectDir}/src/main/resources/static"
-
-    // Ensure the directory exists
-    doFirst {
-        file("${project.projectDir}/src/main/resources/static").mkdirs()
-    }
+    into generatedFrontendStaticDir
 }
 
 // Clean React build artifacts
@@ -85,7 +101,7 @@ tasks.register('cleanReactBuild', Delete) {
     description = 'Clean React build artifacts'
     delete 'src/main/webapp/build'
     delete 'src/main/webapp/node_modules'
-    delete "${project.projectDir}/src/main/resources/static"
+    delete layout.buildDirectory.dir('generated/frontend-static')
 }
 
 // Hook into Gradle lifecycle
@@ -93,14 +109,89 @@ tasks.named('clean') {
     dependsOn cleanReactBuild
 }
 
-tasks.named('compileJava') {
+tasks.named('bootJar') {
+    dependsOn copyReactBuild
+}
+
+tasks.named('bootRun') {
     dependsOn copyReactBuild
 }
 
 tasks.named('processResources') {
-    dependsOn copyReactBuild
+    duplicatesStrategy = org.gradle.api.file.DuplicatesStrategy.EXCLUDE
+    from(generatedFrontendStaticDir) {
+        into 'static'
+    }
+    mustRunAfter(tasks.named('copyReactBuild'))
 }
 
 tasks.named('test') {
     useJUnitPlatform()
+    finalizedBy tasks.named('jacocoTestReport')
+}
+
+tasks.register('unitTest', Test) {
+    description = 'Runs backend unit tests only'
+    group = 'verification'
+    useJUnitPlatform()
+    testClassesDirs = sourceSets.test.output.classesDirs
+    classpath = sourceSets.test.runtimeClasspath
+    exclude '**/*IntegrationTest.class'
+    reports {
+        junitXml.required = true
+        html.required = true
+    }
+}
+
+tasks.register('integrationTest', Test) {
+    description = 'Runs backend integration tests only'
+    group = 'verification'
+    useJUnitPlatform()
+    testClassesDirs = sourceSets.test.output.classesDirs
+    classpath = sourceSets.test.runtimeClasspath
+    include '**/*IntegrationTest.class'
+    shouldRunAfter tasks.named('unitTest')
+    reports {
+        junitXml.required = true
+        html.required = true
+    }
+}
+
+jacoco {
+    toolVersion = '0.8.13'
+}
+
+tasks.named('jacocoTestReport') {
+    dependsOn tasks.named('test')
+    reports {
+        xml.required = true
+        html.required = true
+        csv.required = false
+    }
+}
+
+tasks.register('coverage') {
+    group = 'verification'
+    description = 'Runs tests and generates JaCoCo coverage reports'
+    dependsOn tasks.named('test'), tasks.named('jacocoTestReport')
+}
+
+tasks.named('jacocoTestCoverageVerification') {
+    violationRules {
+        rule {
+            enabled = true
+            element = 'BUNDLE'
+            limit {
+                counter = 'LINE'
+                value = 'COVEREDRATIO'
+                minimum = 0.50
+            }
+        }
+    }
+}
+
+tasks.register('coverageCheck') {
+    group = 'verification'
+    description = 'Fails build if coverage threshold is not met'
+    dependsOn tasks.named('test'), tasks.named('jacocoTestCoverageVerification')
 }

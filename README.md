@@ -1,8 +1,14 @@
-
-
 # SafeFlight Project
 
-## Steps to Set Up the Project
+SafeFlight is a Spring Boot + React flight booking application with PostgreSQL.
+
+## Prerequisites
+
+- Java 24
+- Docker (for PostgreSQL)
+- Node.js 24.x and npm 11.x (for frontend dev and E2E)
+
+## Setup
 
 ### 1. Clone the Repository
 
@@ -11,17 +17,15 @@ git clone https://github.com/harrishdhaithya/group4-safeflight-project.git
 cd group4-safeflight-project
 ```
 
-### 2. Install Node.js
+### 2. Start PostgreSQL
 
-Install the latest version of Node.js if it is not already available on your machine:
-
-👉 [https://nodejs.org/en/download/](https://nodejs.org/en/download/)
+```bash
+docker compose up -d db
+```
 
 ---
 
 ## Project Structure
-
-
 
 <img src="images/filestruct.png"/>
 
@@ -38,8 +42,8 @@ Install the latest version of Node.js if it is not already available on your mac
 * **`src/main/resources/application.properties`**
   Contains logging and application configuration.
 
-* **`src/main/resources/static`**
-  React build files are copied here after building the frontend.
+* **`build/generated/frontend-static`**
+  Generated frontend static assets used during packaging/runtime.
 
 * **`build.gradle`**
   Contains all Gradle build configurations.
@@ -49,74 +53,100 @@ Install the latest version of Node.js if it is not already available on your mac
 
 ---
 
-## Build the Project
+## Run the Application (Local)
 
-Open a terminal or command prompt in the project root directory.
+From project root:
 
-### Build (incremental build)
+```bash
+SPRING_DATASOURCE_URL=jdbc:postgresql://localhost:5433/safeflight \
+SPRING_DATASOURCE_USERNAME=safeflight \
+SPRING_DATASOURCE_PASSWORD=safeflight \
+./gradlew bootRun
+```
+
+App URL: `http://localhost:8080`
+
+---
+
+## Build Commands
+
+### Incremental build
 
 ```bash
 ./gradlew build
 ```
 
-### Clean build artifacts
+### Clean
 
 ```bash
 ./gradlew clean
 ```
 
-### Full build (recommended)
+### Full build
 
 ```bash
 ./gradlew clean build
 ```
 
----
-
-## Run the Application
-
-After building the project, run the generated JAR file:
+### Build runnable JAR
 
 ```bash
-java -jar build/libs/safeflight-0.0.1-SNAPSHOT.jar
+./gradlew clean bootJar
 ```
 
 ---
 
 ## Frontend Development (React)
 
-> ⚠️ Changes made to React files will **not appear** until the project is rebuilt.
-
-To see frontend changes immediately, run the React app separately.
-
-### Steps:
-
-1. Open a terminal inside:
+From `src/main/webapp`:
 
 ```bash
-src/main/webapp
-```
-
-2. Install dependencies (first time only):
-
-```bash
-npm install
-```
-
-3. Start the React development server:
-
-```bash
+npm ci
 npm start
 ```
 
-The React app will run on its own development server.
+Dev server URL: `http://localhost:3000`
 
 ---
 
-## API Proxy Configuration
+## Testing Commands
 
-* A proxy is configured in `package.json` to redirect API calls to the backend.
-* If your backend runs on a different port, update the proxy URL accordingly.
+### Backend
 
-<img src="images/package-json.png"/>
+```bash
+./gradlew unitTest
+./gradlew integrationTest
+./gradlew coverage
+```
+
+### Frontend
+
+From `src/main/webapp`:
+
+```bash
+npm ci
+npm run coverage:check
+```
+
+### E2E (Playwright)
+
+From `src/main/webapp`:
+
+```bash
+# first-time browser install
+npx playwright install chromium
+
+# local headed mode
+npm run e2e
+
+# CI/headless mode
+npm run e2e:ci
+```
+---
+
+## Stop Local Services
+
+```bash
+docker compose down
+```
 
